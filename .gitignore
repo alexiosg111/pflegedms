@@ -92,12 +92,14 @@ pnpm-lock.yaml
 !.pnpmrc.yaml
 
 # Compiled files
-*.js
-!vite.config.js
-!vitest.config.js
-!postcss.config.js
-!tailwind.config.js
+dist-old/**
+build-old/**
 
 # Type definitions
 *.d.ts
 !src/**/*.d.ts
+
+# Renderer output
+/dist/renderer
+/dist/main.js
+/dist/preload.js
