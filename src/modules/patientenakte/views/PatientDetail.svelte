@@ -3,6 +3,7 @@
   import { toastStore } from '@core/stores/toastStore';
   import { patientStore } from '../stores/patientStore';
   import Button from '@core/components/Button.svelte';
+  import PatientAktenView from './PatientAktenView.svelte';
   import type { Patient } from '../types/patient';
 
   export let patient: Patient;
@@ -10,9 +11,18 @@
   const dispatch = createEventDispatcher();
 
   let isDeleting = false;
+  let showAktenView = false;
 
   function handleClose() {
     dispatch('close');
+  }
+
+  function handleViewAkten() {
+    showAktenView = true;
+  }
+
+  function handleBackToDetail() {
+    showAktenView = false;
   }
 
   async function handleDelete() {
@@ -34,20 +44,48 @@
 </script>
 
 <!-- Modal Overlay -->
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-screen overflow-y-auto">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-      <h2 class="text-xl font-semibold text-gray-900">
-        {patient.first_name} {patient.last_name}
-      </h2>
-      <button
-        on:click={handleClose}
-        class="text-gray-500 hover:text-gray-700 text-2xl"
-      >
-        ×
-      </button>
+{#if showAktenView}
+  <!-- Akte View wird in separatem Modal angezeigt -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-screen overflow-y-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <button
+          on:click={handleBackToDetail}
+          class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+        >
+          ← Zurück
+        </button>
+        <button
+          on:click={handleClose}
+          class="text-gray-500 hover:text-gray-700 text-2xl"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <PatientAktenView {patient} />
+      </div>
     </div>
+  </div>
+{:else}
+  <!-- Detail View -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-screen overflow-y-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-900">
+          {patient.first_name} {patient.last_name}
+        </h2>
+        <button
+          on:click={handleClose}
+          class="text-gray-500 hover:text-gray-700 text-2xl"
+        >
+          ×
+        </button>
+      </div>
 
     <!-- Content -->
     <div class="p-6 space-y-6">
@@ -134,7 +172,7 @@
       {/if}
 
       <!-- Buttons -->
-      <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+      <div class="flex items-center justify-between border-t border-gray-200 pt-4 space-x-3">
         <Button
           variant="danger"
           on:click={handleDelete}
@@ -142,10 +180,16 @@
         >
           Archivieren
         </Button>
-        <Button variant="primary" on:click={handleClose}>
-          Schließen
-        </Button>
+        <div class="flex items-center space-x-2">
+          <Button variant="secondary" on:click={handleViewAkten}>
+            📂 Akten anzeigen
+          </Button>
+          <Button variant="primary" on:click={handleClose}>
+            Schließen
+          </Button>
+        </div>
       </div>
     </div>
   </div>
-</div>
+  </div>
+{/if}

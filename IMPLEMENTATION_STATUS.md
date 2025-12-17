@@ -5,7 +5,7 @@
 Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktueller Status:
 
 ```
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  22% (2/9 Phasen)
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  33% (3/9 Phasen)
 ```
 
 ---
@@ -33,20 +33,26 @@ Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktu
 
 ---
 
-### ✅ Phase 2: Patientenakte (1/3 PRs)
-**Ziel**: Erstes funktionierendes Modul mit CRUD
+### ✅ Phase 2: Patientenakte (2/3 PRs)
+**Ziel**: Erstes funktionierendes Modul mit CRUD + Dokumente
 
 | PR | Name | Status | Details |
 |---|---|---|---|
 | 1 | CRUD | ✅ | PatientService + Store + UI |
-| 2 | Dokumente | ⏳ | Document-Upload + OCR |
-| 3 | Akten-View | ⏳ | Folder-Navigation + PDFs |
+| 2 | Dokumente | ✅ | Document-Upload + OCR (Tesseract.js) |
+| 3 | Akten-View | ✅ | Patient-Akten mit Folder-Navigation |
 
-**Features (PR 1)**:
+**Features (PR 1-2)**:
 - Patient-Verwaltung (Create, Read, Update, Delete)
 - Patienten-Liste mit Suche
 - Bearbeiten-Form (Modal)
 - Detail-View (Read-Only)
+- **Dokument-Upload (Drag & Drop)**
+- **OCR mit Tesseract.js (lokal, offline)**
+- **Patient-Akten-View mit Dokumentenliste**
+- **Auto-Klassifizierung von Dokumenten**
+- Kategorie-System (7 Kategorien)
+- Upload-Progress (0-100%)
 - Validierung & Error-Handling
 - Vollständig integriert in MainLayout
 
