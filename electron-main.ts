@@ -1,8 +1,10 @@
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron';
 import path from 'path';
 import isDev from 'electron-is-dev';
+import { db } from './src/main/services/db';
 
 let mainWindow: BrowserWindow | null = null;
+let dbInitialized = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -78,9 +80,109 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-app.on('ready', createWindow);
+// ============================================================================
+// IPC HANDLERS
+// ============================================================================
+
+// Database operations
+ipcMain.handle('db:query', async (event, sql: string, params?: unknown[]) => {
+  try {
+    if (!dbInitialized) {
+      throw new Error('Database not initialized');
+    }
+    return db.query(sql, params);
+  } catch (err) {
+    console.error('db:query error:', err);
+    mainWindow?.webContents.send('error', (err as Error).message);
+    throw err;
+  }
+});
+
+ipcMain.handle('db:execute', async (event, sql: string, params?: unknown[]) => {
+  try {
+    if (!dbInitialized) {
+      throw new Error('Database not initialized');
+    }
+    return db.execute(sql, params);
+  } catch (err) {
+    console.error('db:execute error:', err);
+    mainWindow?.webContents.send('error', (err as Error).message);
+    throw err;
+  }
+});
+
+// File dialog
+ipcMain.handle('file:select', async (event, options) => {
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    title: options?.title || 'Datei auswählen',
+    defaultPath: options?.defaultPath,
+    filters: options?.filters || [
+      { name: 'Alle Dateien', extensions: ['*'] },
+      { name: 'PDF', extensions: ['pdf'] },
+      { name: 'Bilder', extensions: ['jpg', 'jpeg', 'png', 'tiff'] },
+    ],
+    properties: ['openFile', ...(options?.properties || [])],
+  });
+
+  return result.canceled ? null : result.filePaths[0];
+});
+
+// Directory dialog
+ipcMain.handle('dir:select', async (event) => {
+  const result = await dialog.showOpenDialog(mainWindow!, {
+    title: 'Ordner auswählen',
+    properties: ['openDirectory'],
+  });
+
+  return result.canceled ? null : result.filePaths[0];
+});
+
+// Backup
+ipcMain.handle('backup:create', async (event, targetDir: string) => {
+  try {
+    return db.backup(path.join(targetDir, `backup-${Date.now()}.db`));
+  } catch (err) {
+    console.error('backup:create error:', err);
+    mainWindow?.webContents.send('error', (err as Error).message);
+    return false;
+  }
+});
+
+// App info
+ipcMain.handle('app:version', async () => {
+  return app.getVersion();
+});
+
+ipcMain.handle('app:path', async () => {
+  return app.getAppPath();
+});
+
+// ============================================================================
+// LIFECYCLE EVENTS
+// ============================================================================
+
+app.on('ready', async () => {
+  // Initialize database with default master password
+  // TODO: In production, get password from Login dialog
+  try {
+    await db.initialize('defaultPassword');
+    dbInitialized = true;
+
+    if (mainWindow) {
+      mainWindow.webContents.send('db:ready', true);
+    }
+  } catch (err) {
+    console.error('Database initialization failed:', err);
+    if (mainWindow) {
+      mainWindow.webContents.send('error', 'Database initialization failed');
+    }
+  }
+
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
+  db.close();
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -94,5 +196,6 @@ app.on('activate', () => {
 
 // Handle app termination gracefully
 process.on('SIGTERM', () => {
+  db.close();
   app.quit();
 });

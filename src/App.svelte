@@ -2,6 +2,7 @@
   import { authStore } from './core/stores/authStore';
   import Login from './core/shell/Login.svelte';
   import MainLayout from './core/shell/MainLayout.svelte';
+  import Toast from './core/components/Toast.svelte';
 
   $: isAuthenticated = $authStore.isAuthenticated;
 </script>
@@ -11,6 +12,9 @@
 {:else}
   <MainLayout />
 {/if}
+
+<Toast />
+
 
 <style>
   :global(html, body) {

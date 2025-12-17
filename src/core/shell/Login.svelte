@@ -1,13 +1,30 @@
 <script lang="ts">
   import { authStore } from '../stores/authStore';
+  import { toastStore } from '../stores/toastStore';
   import Button from '../components/Button.svelte';
+  import { logger } from '../utils/logger';
 
   let password: string = '';
   let showPassword: boolean = false;
   let isLoading: boolean = false;
   let error: string = '';
+  let isDbReady: boolean = false;
 
-  // TODO: In Phase 2 wird die echte Passwort-Verifikation mit Master-Passwort-Hash hinzugefügt
+  // Listen for database ready signal
+  if (typeof window !== 'undefined' && window.api) {
+    window.api.onDatabaseReady((ready: boolean) => {
+      isDbReady = ready;
+      if (ready) {
+        toastStore.info('Datenbank verbunden', 2000);
+        logger.info('Database initialized and ready');
+      }
+    });
+
+    window.api.onError((error: string) => {
+      logger.error('IPC Error:', error);
+      toastStore.error(error);
+    });
+  }
 
   async function handleLogin() {
     if (!password) {
@@ -15,25 +32,29 @@
       return;
     }
 
-    // TODO: Passwort mit bcrypt gegen Hash vergleichen
-    // Für MVP: Temporär akzeptieren wir jedes Passwort (wird in PR2 implementiert)
+    if (!isDbReady) {
+      error = 'Datenbank wird noch initialisiert...';
+      return;
+    }
 
     isLoading = true;
     error = '';
 
     try {
-      // Simuliere kurze Verzögerung
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Im MVP akzeptieren wir jedes Passwort
-      if (password.length > 0) {
+      // In Phase 1 PR 2: Passwort wird gegen Master-Passwort-Hash geprüft
+      // Für MVP: Passwort = "defaultPassword"
+      if (password === 'defaultPassword') {
         authStore.login('Administrator');
+        toastStore.success('Erfolgreich angemeldet!', 2000);
+        logger.info('User logged in successfully');
       } else {
         error = 'Ungültiges Passwort.';
+        logger.warn('Failed login attempt');
       }
     } catch (err) {
       error = 'Fehler bei der Authentifizierung.';
-      console.error(err);
+      logger.error('Login error', err);
+      toastStore.error('Login fehlgeschlagen');
     } finally {
       isLoading = false;
     }
@@ -107,9 +128,18 @@
       </Button>
     </form>
 
+    <!-- Status -->
+    {#if !isDbReady}
+      <div class="text-center text-xs text-yellow-600 mt-4 p-2 bg-yellow-50 rounded">
+        ⏳ Datenbank wird initialisiert...
+      </div>
+    {/if}
+
     <!-- Help Text -->
     <p class="text-center text-xs text-gray-500 mt-6">
       🔒 Ihre Daten werden verschlüsselt gespeichert
+      <br />
+      Passwort für MVP: <code class="text-xs bg-gray-100 px-1 rounded">defaultPassword</code>
     </p>
   </div>
 </div>
