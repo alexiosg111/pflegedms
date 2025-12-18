@@ -5,7 +5,7 @@
 Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktueller Status:
 
 ```
-██████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  67% (6/9 Phasen)
+████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  78% (7/9 Phasen)
 ```
 
 ---
@@ -126,15 +126,22 @@ Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktu
 
 ---
 
-### ⏳ Phase 6: QM-Modul (0/1 PR)
-**Ziel**: Qualitätsmgmt. mit Versionierung
+### ✅ Phase 6: QM-Modul (1/1 PR)
+**Ziel**: Qualitätsmgmt. mit Versionierung & Genehmigung
 
-**Geplante Features**:
-- QM-Ordner (Hygieneplan, Notfallmanagement, etc.)
-- Versionierte Dokumente (V1.0, V1.1, etc.)
-- Genehmigungsworkflow
+**Features (PR 1)**:
+- ✅ Rekursive Ordnerstruktur
+- ✅ 8 Standard-Vorlagen (Hygieneplan, Notfallmanagement, etc.)
+- ✅ Dokumenten-Versionierung (v1.0 → v1.1 → v2.0)
+- ✅ Genehmigungsworkflow (draft → approved)
+- ✅ Recursive Svelte Tree-Komponente
+- ✅ Template-Grid für Schnelleinstieg
+- ✅ Versionsverlauf
+- ✅ Soft Deletes (Archivierung)
 
-**Geschätzter Aufwand**: 1 Tag
+**Merge-Status**: ✅ Merge-ready
+
+**Status**: Alle 5 Business-Module fertig!
 
 ---
 
