@@ -15,7 +15,11 @@
   }
 
   function handleSearch() {
-    // TODO: Globale Suche implementieren
+    dispatch('search');
+  }
+
+  function handleSettings() {
+    dispatch('settings');
   }
 </script>
 
@@ -62,6 +66,7 @@
   <!-- Settings Section -->
   <div class="border-t border-gray-200 px-2 py-4 space-y-1">
     <button
+      on:click={handleSettings}
       class="w-full flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
     >
       <span>⚙️</span>

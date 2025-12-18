@@ -7,8 +7,12 @@
   import ContractList from '@modules/vertragsmanagement/views/ContractList.svelte';
   import InvoiceList from '@modules/rechnungsmanagement/views/InvoiceList.svelte';
   import QMList from '@modules/qm/views/QMList.svelte';
+  import SearchDialog from '../components/SearchDialog.svelte';
+  import Settings from './Settings.svelte';
 
   let currentPage: string = 'dashboard';
+  let showSearchDialog = false;
+  let showSettings = false;
 
   const modules = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
@@ -26,11 +30,21 @@
   function handleLogout() {
     authStore.logout();
   }
+
+  function handleSettingsClick() {
+    showSettings = true;
+  }
 </script>
 
 <div class="flex w-full h-full bg-white">
   <!-- Sidebar -->
-  <Sidebar {modules} {currentPage} on:navigate={(e) => navigateTo(e.detail)} on:logout={handleLogout} />
+  <Sidebar
+    {modules}
+    {currentPage}
+    on:navigate={(e) => navigateTo(e.detail)}
+    on:logout={handleLogout}
+    on:settings={() => (showSettings = true)}
+  />
 
   <!-- Main Content -->
   <main class="flex-1 overflow-hidden flex flex-col">
@@ -74,6 +88,14 @@
     </section>
   </main>
 </div>
+
+<!-- Search Dialog -->
+<SearchDialog bind:isOpen={showSearchDialog} />
+
+<!-- Settings Dialog -->
+{#if showSettings}
+  <Settings on:close={() => (showSettings = false)} />
+{/if}
 
 <style>
   :global(body) {

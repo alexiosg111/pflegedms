@@ -5,7 +5,7 @@
 Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktueller Status:
 
 ```
-████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  78% (7/9 Phasen)
+██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  89% (8/9 Phasen)
 ```
 
 ---
@@ -145,15 +145,23 @@ Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktu
 
 ---
 
-### ⏳ Phase 7: Globale Features (0/3 PRs)
+### ✅ Phase 7: Globale Features (1/3 PRs)
 **Ziel**: Volltextsuche, Export, Backup
 
-**Geplante Features**:
-- FTS5 Volltextsuche
-- DSGVO-Export (ZIP)
-- Backup-Scheduler (täglich/wöchentlich)
+**Features (PR 1)**:
+- ✅ SearchService (FTS5 über alle Module)
+- ✅ SearchDialog (Ctrl+K Shortcut, Keyboard-Navigation)
+- ✅ ExportService (DSGVO-Export als ZIP)
+- ✅ BackupService (Auto-Scheduler täglich/wöchentlich)
+- ✅ Settings Dialog (Master-Passwort, Backup-Config, Manual Export)
+- ✅ Relevance-Scoring
+- ✅ Status-Monitoring
 
-**Geschätzter Aufwand**: 2 Tage
+**Merge-Status**: ✅ Merge-ready
+
+**Nächste Schritte (PR 2-3)**:
+- E2E-Tests (Playwright)
+- Unit-Tests (Vitest)
 
 ---
 
