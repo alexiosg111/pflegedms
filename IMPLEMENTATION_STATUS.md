@@ -5,7 +5,7 @@
 Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktueller Status:
 
 ```
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  56% (5/9 Phasen)
+██████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  67% (6/9 Phasen)
 ```
 
 ---
@@ -104,16 +104,25 @@ Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktu
 
 ---
 
-### ⏳ Phase 5: Rechnungsmanagement (0/2 PRs)
-**Ziel**: Ein-/Ausgangsrechnungen mit Status
+### ✅ Phase 5: Rechnungsmanagement (1/2 PRs)
+**Ziel**: Ein-/Ausgangsrechnungen mit Kanban-Board
 
-**Geplante Features**:
-- Invoice-CRUD (Pending, Paid, Overdue)
-- Status-Board (Kanban-ähnlich)
-- OCR-Betrag-Extraktion
-- Summen-Tracking
+**Features (PR 1)**:
+- ✅ Invoice-CRUD (Open, Paid, Overdue)
+- ✅ Kanban-Board mit 3 Spalten + Drag-Drop
+- ✅ Auto-Status basierend auf Fälligkeitsdatum
+- ✅ Spalten-Summen
+- ✅ Statistik-Panel
+- ✅ OCR-Betrag-Extraktion (Regex)
+- ✅ Farbcodierung (gelb/grün/rot)
 
-**Geschätzter Aufwand**: 2 Tage
+**Merge-Status**: ✅ Merge-ready
+
+**Nächster Schritt (PR 2)**:
+- PDF-Upload mit OCR
+- Integration mit Posteingang
+- Mahnungsfeature
+- Export
 
 ---
 
