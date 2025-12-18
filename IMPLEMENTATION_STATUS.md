@@ -5,7 +5,7 @@
 Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktueller Status:
 
 ```
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  33% (3/9 Phasen)
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  44% (4/9 Phasen)
 ```
 
 ---
@@ -60,17 +60,25 @@ Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktu
 
 ---
 
-### ⏳ Phase 3: Posteingang (0/2 PRs)
-**Ziel**: Dokumenten-Routing & OCR-Integration
+### ✅ Phase 3: Posteingang (1/2 PRs)
+**Ziel**: Dokumenten-Routing & Cross-Module-Integration
 
-**Geplante Features**:
-- Mailbox-Items Management
-- Dokument-Upload-Zone (Drag & Drop)
-- OCR mit Tesseract.js
-- Auto-Klassifizierung
-- Router zu Zielmodulen
+**Features (PR 1)**:
+- ✅ Mailbox-Items Management (CRUD)
+- ✅ Status-Workflow (new → in_progress → completed)
+- ✅ Priorisierung (low / normal / high)
+- ✅ Cross-Module-Router (zu Patienten oder Modulen)
+- ✅ Kachel-Design mit Statistik-Panel
+- ✅ AssignmentDialog für Zuordnung
+- ✅ Status-Tabs mit Filter
+- ✅ Responsive Layout
 
-**Geschätzter Aufwand**: 2 Tage
+**Merge-Status**: ✅ Merge-ready
+
+**Nächster Schritt (PR 2)**: 
+- Automatische Dokumenten-Erfassung beim Upload
+- Bulk-Operations
+- Exportfunktion
 
 ---
 

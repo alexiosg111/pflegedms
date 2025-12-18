@@ -3,6 +3,7 @@
   import Sidebar from './Sidebar.svelte';
   import Dashboard from './Dashboard.svelte';
   import PatientList from '@modules/patientenakte/views/PatientList.svelte';
+  import MailboxList from '@modules/posteingang/views/MailboxList.svelte';
 
   let currentPage: string = 'dashboard';
 
@@ -49,13 +50,15 @@
         <Dashboard />
       {:else if currentPage === 'patients'}
         <PatientList />
+      {:else if currentPage === 'mailbox'}
+        <MailboxList />
       {:else}
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">
             {modules.find((m) => m.id === currentPage)?.label}
           </h2>
           <p class="text-gray-600">
-            Modul wird in Phase {currentPage === 'mailbox' ? '3' : currentPage === 'contracts' ? '4' : currentPage === 'invoices' ? '5' : currentPage === 'qm' ? '6' : '7'} implementiert.
+            Modul wird in Phase {currentPage === 'contracts' ? '4' : currentPage === 'invoices' ? '5' : currentPage === 'qm' ? '6' : '7'} implementiert.
           </p>
         </div>
       {/if}
