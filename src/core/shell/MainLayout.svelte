@@ -4,6 +4,7 @@
   import Dashboard from './Dashboard.svelte';
   import PatientList from '@modules/patientenakte/views/PatientList.svelte';
   import MailboxList from '@modules/posteingang/views/MailboxList.svelte';
+  import ContractList from '@modules/vertragsmanagement/views/ContractList.svelte';
 
   let currentPage: string = 'dashboard';
 
@@ -52,13 +53,15 @@
         <PatientList />
       {:else if currentPage === 'mailbox'}
         <MailboxList />
+      {:else if currentPage === 'contracts'}
+        <ContractList />
       {:else}
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">
             {modules.find((m) => m.id === currentPage)?.label}
           </h2>
           <p class="text-gray-600">
-            Modul wird in Phase {currentPage === 'contracts' ? '4' : currentPage === 'invoices' ? '5' : currentPage === 'qm' ? '6' : '7'} implementiert.
+            Modul wird in Phase {currentPage === 'invoices' ? '5' : currentPage === 'qm' ? '6' : '7'} implementiert.
           </p>
         </div>
       {/if}
