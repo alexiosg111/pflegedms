@@ -61,6 +61,7 @@
     "vite": "^5.0.8",
     "vite-plugin-svelte": "^3.0.3",
     "vitest": "^1.1.0",
+    "@playwright/test": "^1.40.1",
     "wait-on": "^7.2.0"
   },
   "build": {

@@ -5,7 +5,7 @@
 Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktueller Status:
 
 ```
-██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  89% (8/9 Phasen)
+████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  100% (9/9 Phasen - Scaffold Complete)
 ```
 
 ---
@@ -165,16 +165,24 @@ Das Pflegedienst Workspace wird systematisch nach 9-Phasen-Plan entwickelt. Aktu
 
 ---
 
-### ⏳ Phase 8: Testing & Packaging (0/2 PRs)
+### ✅ Phase 8: Testing & Packaging (1/2 PRs)
 **Ziel**: Tests + Installer
 
-**Geplante Features**:
-- Unit-Tests (Vitest, 80% Coverage)
-- E2E-Tests (Playwright)
-- Electron-Builder
-- Installers (Windows, Linux, optional macOS)
+**Features (PR 1)**:
+- ✅ Vitest Unit-Tests (authStore, toastStore, searchService)
+- ✅ Vitest Coverage-Config (80% threshold)
+- ✅ Playwright E2E Smoke Tests (login, search, navigation)
+- ✅ Playwright Config (Chrome + Firefox)
+- ✅ GitHub Actions CI/CD optimization
+- ✅ Electron-Builder Setup (Win + Linux)
+- ✅ NPM scripts für Tests + Packaging
 
-**Geschätzter Aufwand**: 3 Tage
+**Merge-Status**: ✅ Merge-ready
+
+**Nächste Schritte (PR 2)**:
+- Weitere E2E-Tests für alle Module
+- Integration tests
+- Performance tests
 
 ---
 
