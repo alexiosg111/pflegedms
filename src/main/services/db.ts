@@ -3,10 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { app } from 'electron';
 
-interface MigrationResult {
-  success: boolean;
-  message: string;
-}
 
 export class DatabaseService {
   private db: Database.Database | null = null;
@@ -214,19 +210,22 @@ export class DatabaseService {
   /**
    * Backup database to a file
    */
-  backup(backupPath: string): boolean {
+  backup(backupPath: string): Promise<boolean> {
     if (!this.db) throw new Error('Database not initialized');
 
     try {
-      const backupDb = new Database(backupPath);
-      const backup = this.db.backup(backupDb);
-      backup.step(-1); // Backup all pages
-      backup.finish();
-      backupDb.close();
-      return true;
+      // better-sqlite3 backup API takes destination filename as string, not Database object
+      const backup = this.db.backup(backupPath);
+      // better-sqlite3 backup API returns a Promise that resolves when complete
+      return backup.then(() => {
+        return true;
+      }).catch((err: Error) => {
+        console.error('Backup failed:', err);
+        return false;
+      });
     } catch (err) {
       console.error('Backup error:', err);
-      return false;
+      return Promise.resolve(false);
     }
   }
 }

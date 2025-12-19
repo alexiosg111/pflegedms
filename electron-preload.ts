@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-// Expose safe APIs to renderer process
-contextBridge.exposeInMainWorld('api', {
+const api = {
   // Database operations
   queryDatabase: (sql: string, params?: unknown[]) =>
     ipcRenderer.invoke('db:query', sql, params),
@@ -30,7 +29,10 @@ contextBridge.exposeInMainWorld('api', {
   onError: (callback: (error: string) => void) => {
     ipcRenderer.on('error', (_, error) => callback(error));
   },
-});
+};
+
+// Expose safe APIs to renderer process
+contextBridge.exposeInMainWorld('api', api);
 
 declare global {
   interface Window {
@@ -39,4 +41,4 @@ declare global {
 }
 
 // Export for TypeScript
-export const api = window.api;
+export { api };

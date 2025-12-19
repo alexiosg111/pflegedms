@@ -6,7 +6,7 @@ import { writable } from 'svelte/store';
 import { documentService } from '../services/documentService';
 import { ocrService } from '../services/ocrService';
 import { logger } from '@core/utils/logger';
-import type { Document, PatientDocument, CreateDocumentInput } from '../types/document';
+import type { PatientDocument, CreateDocumentInput } from '../types/document';
 
 interface DocumentState {
   documents: PatientDocument[];

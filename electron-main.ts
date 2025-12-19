@@ -16,7 +16,6 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      enableRemoteModule: false,
       sandbox: true,
     },
   });
@@ -85,7 +84,7 @@ function createMenu() {
 // ============================================================================
 
 // Database operations
-ipcMain.handle('db:query', async (event, sql: string, params?: unknown[]) => {
+ipcMain.handle('db:query', async (_event, sql: string, params?: unknown[]) => {
   try {
     if (!dbInitialized) {
       throw new Error('Database not initialized');
@@ -98,7 +97,7 @@ ipcMain.handle('db:query', async (event, sql: string, params?: unknown[]) => {
   }
 });
 
-ipcMain.handle('db:execute', async (event, sql: string, params?: unknown[]) => {
+ipcMain.handle('db:execute', async (_event, sql: string, params?: unknown[]) => {
   try {
     if (!dbInitialized) {
       throw new Error('Database not initialized');
@@ -112,7 +111,7 @@ ipcMain.handle('db:execute', async (event, sql: string, params?: unknown[]) => {
 });
 
 // File dialog
-ipcMain.handle('file:select', async (event, options) => {
+ipcMain.handle('file:select', async (_event, options) => {
   const result = await dialog.showOpenDialog(mainWindow!, {
     title: options?.title || 'Datei auswählen',
     defaultPath: options?.defaultPath,
@@ -128,7 +127,7 @@ ipcMain.handle('file:select', async (event, options) => {
 });
 
 // Directory dialog
-ipcMain.handle('dir:select', async (event) => {
+ipcMain.handle('dir:select', async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
     title: 'Ordner auswählen',
     properties: ['openDirectory'],
@@ -138,7 +137,7 @@ ipcMain.handle('dir:select', async (event) => {
 });
 
 // Backup
-ipcMain.handle('backup:create', async (event, targetDir: string) => {
+ipcMain.handle('backup:create', async (_event, targetDir: string) => {
   try {
     return db.backup(path.join(targetDir, `backup-${Date.now()}.db`));
   } catch (err) {

@@ -2,7 +2,7 @@
  * Full-text search service using SQLite FTS5
  */
 
-import { logger } from './logger';
+import { logger } from '../utils/logger';
 
 export interface SearchResult {
   id: string;

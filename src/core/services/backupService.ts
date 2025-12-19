@@ -2,7 +2,7 @@
  * Backup scheduler service - automatic encrypted DB backups
  */
 
-import { logger } from './logger';
+import { logger } from '../utils/logger';
 
 export interface BackupConfig {
   enabled: boolean;

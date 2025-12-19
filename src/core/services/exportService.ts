@@ -2,7 +2,7 @@
  * DSGVO export service - generates ZIP with SQL dump + PDFs + metadata
  */
 
-import { logger } from './logger';
+import { logger } from '../utils/logger';
 
 export interface ExportOptions {
   includeSQLDump: boolean;
@@ -73,7 +73,7 @@ export class ExportService {
   /**
    * Get SQL dump of all data
    */
-  private async getSQLDump(): Promise<string> {
+  async getSQLDump(): Promise<string> {
     try {
       // Export all tables
       const tables = [
@@ -106,7 +106,7 @@ export class ExportService {
   /**
    * Get all patient data as JSON
    */
-  private async getPatientData(): Promise<Record<string, unknown>> {
+  async getPatientData(): Promise<Record<string, unknown>> {
     try {
       const sql = `
         SELECT

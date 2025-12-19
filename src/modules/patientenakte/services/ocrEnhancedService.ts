@@ -80,7 +80,7 @@ export class OCREnhancedService {
       const ocrResult: OCRResult = {
         text: result.data.text,
         confidence: Math.round(result.data.confidence * 100) / 100,
-        language: result.data.paragraphs?.[0]?.languages?.[0] || 'deu',
+        language: 'deu',
         blockCount: result.data.blocks?.length || 0,
         requiresReview: result.data.confidence < CONFIDENCE_THRESHOLD / 100,
       };
