@@ -93,6 +93,8 @@
   <!-- Drop Zone -->
   {#if !selectedFile}
     <div
+      role="region"
+      aria-label="Dokument Upload Bereich"
       on:dragover={handleDragover}
       on:dragleave={handleDragleave}
       on:drop={handleDrop}
@@ -108,13 +110,17 @@
         Datei ziehen und ablegen oder klicken zum Auswählen
       </p>
       <label class="inline-block">
+        <span class="sr-only">Datei auswählen</span>
         <input
           type="file"
           on:change={handleFileInput}
           class="hidden"
           accept="image/*,.pdf"
         />
-        <Button variant="primary" type="button" on:click={(e) => e.target.click()}>
+        <Button variant="primary" type="button" on:click={(e) => {
+          const input = e.target.parentElement.querySelector('input');
+          if(input) input.click();
+        }}>
           Datei auswählen
         </Button>
       </label>
@@ -144,10 +150,11 @@
 
       <!-- Form Fields -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">
+        <label for="category-select" class="block text-sm font-medium text-gray-900 mb-2">
           Kategorie *
         </label>
         <select
+          id="category-select"
           bind:value={selectedCategory}
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -160,10 +167,11 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">
+        <label for="notes-textarea" class="block text-sm font-medium text-gray-900 mb-2">
           Notizen
         </label>
         <textarea
+          id="notes-textarea"
           bind:value={notes}
           placeholder="Optionale Notizen..."
           rows="2"

@@ -87,7 +87,8 @@
           <input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            bind:value={password}
+            value={password}
+            on:input={(e) => (password = e.currentTarget.value)}
             on:keypress={handleKeyPress}
             placeholder="••••••••"
             class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

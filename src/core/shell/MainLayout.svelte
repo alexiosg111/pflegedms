@@ -32,10 +32,6 @@
   function handleLogout() {
     authStore.logout();
   }
-
-  function handleSettingsClick() {
-    showSettings = true;
-  }
 </script>
 
 <div class="flex w-full h-full bg-white">

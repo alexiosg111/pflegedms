@@ -4,7 +4,6 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { toastStore } from '../toastStore';
-import type { ToastState } from '../toastStore';
 
 describe('toastStore', () => {
   let state: { toasts: any[] } | null = null;

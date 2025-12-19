@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Button from '@core/components/Button.svelte';
   import type { Contract } from '../types/contract';
 
   export let contract: Contract;

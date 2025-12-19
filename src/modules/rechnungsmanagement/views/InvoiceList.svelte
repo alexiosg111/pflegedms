@@ -131,11 +131,15 @@
 
         <div
           class="flex-1 p-4 space-y-3 overflow-y-auto min-h-96"
+          role="region"
+          aria-label="Rechnungsliste Offen"
           on:dragover={handleDragOver}
           on:drop={(e) => handleDrop(e, 'open')}
         >
           {#each $invoiceStore.invoicesByStatus?.open || [] as invoice (invoice.id)}
             <div
+              role="article"
+              aria-label={`Rechnung ${invoice.invoice_number}`}
               draggable={true}
               on:dragstart={(e) => handleDragStart(e, invoice, 'open')}
               class="cursor-move"
@@ -169,11 +173,15 @@
 
         <div
           class="flex-1 p-4 space-y-3 overflow-y-auto min-h-96"
+          role="region"
+          aria-label="Rechnungsliste Bezahlt"
           on:dragover={handleDragOver}
           on:drop={(e) => handleDrop(e, 'paid')}
         >
           {#each $invoiceStore.invoicesByStatus?.paid || [] as invoice (invoice.id)}
             <div
+              role="article"
+              aria-label={`Rechnung ${invoice.invoice_number}`}
               draggable={true}
               on:dragstart={(e) => handleDragStart(e, invoice, 'paid')}
               class="cursor-move"
@@ -207,11 +215,15 @@
 
         <div
           class="flex-1 p-4 space-y-3 overflow-y-auto min-h-96"
+          role="region"
+          aria-label="Rechnungsliste Überfällig"
           on:dragover={handleDragOver}
           on:drop={(e) => handleDrop(e, 'overdue')}
         >
           {#each $invoiceStore.invoicesByStatus?.overdue || [] as invoice (invoice.id)}
             <div
+              role="article"
+              aria-label={`Rechnung ${invoice.invoice_number}`}
               draggable={true}
               on:dragstart={(e) => handleDragStart(e, invoice, 'overdue')}
               class="cursor-move"

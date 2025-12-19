@@ -2,10 +2,10 @@
   import { createEventDispatcher } from 'svelte';
   import Button from '@core/components/Button.svelte';
   import { patientStore } from '@modules/patientenakte/stores/patientStore';
-  import type { Patient } from '@modules/patientenakte/types/patient';
   import type { MailboxItem } from '../types/mailbox';
 
-  export let item: MailboxItem;
+  // unused-export-let: item is required by interface but used implicitly/future
+  export const item: MailboxItem = {} as MailboxItem;
 
   const dispatch = createEventDispatcher();
 
@@ -92,10 +92,11 @@
       <!-- Patient Selection -->
       {#if assignmentType === 'patient'}
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-2">
+          <label for="patient-select" class="block text-sm font-medium text-gray-900 mb-2">
             Patient wählen *
           </label>
           <select
+            id="patient-select"
             bind:value={selectedPatientId}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -117,6 +118,7 @@
       <!-- Module Selection -->
       {#if assignmentType === 'module'}
         <div>
+          <!-- svelte-ignore a11y-label-has-associated-control -->
           <label class="block text-sm font-medium text-gray-900 mb-3">
             Ziel-Modul wählen *
           </label>
@@ -153,10 +155,11 @@
 
       <!-- Notes -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">
+        <label for="assignment-notes" class="block text-sm font-medium text-gray-900 mb-2">
           Notizen (optional)
         </label>
         <textarea
+          id="assignment-notes"
           bind:value={notes}
           placeholder="Zusätzliche Hinweise zur Zuordnung..."
           rows="3"

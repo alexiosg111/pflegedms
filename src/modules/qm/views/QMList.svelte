@@ -79,8 +79,7 @@
     }
   }
 
-  async function handleNewVersion(e: CustomEvent<string>) {
-    const documentId = e.detail;
+  async function handleNewVersion() {
     // Reload current folder to show new version
     if ($qmStore.currentFolderId) {
       await qmStore.loadFolderDocuments($qmStore.currentFolderId);

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Button from '@core/components/Button.svelte';
   import type { Invoice } from '../types/invoice';
 
   export let invoice: Invoice;

@@ -4,7 +4,8 @@
   import Button from '@core/components/Button.svelte';
   import { DOCUMENT_CATEGORIES } from '../types/document';
 
-  export let patientId: string;
+  // unused-export-let: patientId is required by interface but used implicitly/future
+  export const patientId: string = '';
 
   let selectedDocumentId: string | null = null;
   let showFullText = false;

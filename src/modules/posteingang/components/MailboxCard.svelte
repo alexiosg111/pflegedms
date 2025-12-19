@@ -46,10 +46,6 @@
   function handleMarkComplete() {
     dispatch('updateStatus', { id: item.id, status: 'completed' });
   }
-
-  function handleReject() {
-    dispatch('reject', item.id);
-  }
 </script>
 
 <div class={`rounded-lg border-2 p-4 shadow-sm transition-all hover:shadow-md cursor-pointer ${getPriorityColor(item.priority)}`}>

@@ -182,10 +182,11 @@
 
           <div class="space-y-3">
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1">
+              <label for="new-password" class="block text-sm font-medium text-gray-900 mb-1">
                 Neues Master-Passwort
               </label>
               <input
+                id="new-password"
                 type="password"
                 bind:value={masterPassword}
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -194,10 +195,11 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1">
+              <label for="repeat-password" class="block text-sm font-medium text-gray-900 mb-1">
                 Passwort wiederholen
               </label>
               <input
+                id="repeat-password"
                 type="password"
                 bind:value={masterPasswordRepeat}
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -237,10 +239,11 @@
 
             {#if backupConfig.enabled}
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="backup-frequency" class="block text-sm font-medium text-gray-900 mb-1">
                   Häufigkeit
                 </label>
                 <select
+                  id="backup-frequency"
                   bind:value={backupConfig.frequency}
                   class="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
@@ -250,10 +253,11 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="backup-time" class="block text-sm font-medium text-gray-900 mb-1">
                   Uhrzeit
                 </label>
                 <input
+                  id="backup-time"
                   type="time"
                   bind:value={backupConfig.backupTime}
                   class="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -261,10 +265,11 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="backup-dir" class="block text-sm font-medium text-gray-900 mb-1">
                   Backup-Verzeichnis
                 </label>
                 <input
+                  id="backup-dir"
                   type="text"
                   bind:value={backupConfig.backupDir}
                   class="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -272,10 +277,11 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="max-backups" class="block text-sm font-medium text-gray-900 mb-1">
                   Maximale Anzahl Backups
                 </label>
                 <input
+                  id="max-backups"
                   type="number"
                   bind:value={backupConfig.maxBackups}
                   class="w-full px-3 py-2 border border-gray-300 rounded-md"
