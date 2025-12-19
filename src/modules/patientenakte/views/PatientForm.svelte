@@ -98,10 +98,11 @@
       <!-- Namen -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="first-name" class="block text-sm font-medium text-gray-900 mb-1">
             Vorname *
           </label>
           <input
+            id="first-name"
             type="text"
             bind:value={formData.first_name}
             required
@@ -109,10 +110,11 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="last-name" class="block text-sm font-medium text-gray-900 mb-1">
             Nachname *
           </label>
           <input
+            id="last-name"
             type="text"
             bind:value={formData.last_name}
             required
@@ -124,20 +126,22 @@
       <!-- Geburtsdatum & Geschlecht -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="dob" class="block text-sm font-medium text-gray-900 mb-1">
             Geburtsdatum
           </label>
           <input
+            id="dob"
             type="date"
             bind:value={formData.date_of_birth}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="gender" class="block text-sm font-medium text-gray-900 mb-1">
             Geschlecht
           </label>
           <select
+            id="gender"
             bind:value={formData.gender}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -152,20 +156,22 @@
       <!-- Kontakt -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="phone" class="block text-sm font-medium text-gray-900 mb-1">
             Telefon
           </label>
           <input
+            id="phone"
             type="tel"
             bind:value={formData.phone}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="email" class="block text-sm font-medium text-gray-900 mb-1">
             E-Mail
           </label>
           <input
+            id="email"
             type="email"
             bind:value={formData.email}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -175,10 +181,11 @@
 
       <!-- Adresse -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="address" class="block text-sm font-medium text-gray-900 mb-1">
           Adresse
         </label>
         <input
+          id="address"
           type="text"
           bind:value={formData.address}
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -188,20 +195,22 @@
       <!-- Stadt & PLZ -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="zip" class="block text-sm font-medium text-gray-900 mb-1">
             Postleitzahl
           </label>
           <input
+            id="zip"
             type="text"
             bind:value={formData.postal_code}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="city" class="block text-sm font-medium text-gray-900 mb-1">
             Stadt
           </label>
           <input
+            id="city"
             type="text"
             bind:value={formData.city}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -212,20 +221,22 @@
       <!-- Versicherung -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="insurance-company" class="block text-sm font-medium text-gray-900 mb-1">
             Versicherung
           </label>
           <input
+            id="insurance-company"
             type="text"
             bind:value={formData.insurance_company}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="insurance-number" class="block text-sm font-medium text-gray-900 mb-1">
             Versichertennummer
           </label>
           <input
+            id="insurance-number"
             type="text"
             bind:value={formData.insurance_number}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -235,10 +246,11 @@
 
       <!-- Hausarzt -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="primary-doctor" class="block text-sm font-medium text-gray-900 mb-1">
           Hausarzt
         </label>
         <input
+          id="primary-doctor"
           type="text"
           bind:value={formData.primary_doctor}
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -247,10 +259,11 @@
 
       <!-- Notizen -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="notes" class="block text-sm font-medium text-gray-900 mb-1">
           Notizen
         </label>
         <textarea
+          id="notes"
           bind:value={formData.notes}
           rows="3"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -262,7 +275,7 @@
         <Button variant="secondary" on:click={handleClose}>
           Abbrechen
         </Button>
-        <Button variant="primary" {loading: isSubmitting} type="submit">
+        <Button variant="primary" loading={isSubmitting} type="submit">
           {$selectedPatient ? 'Aktualisieren' : 'Erstellen'}
         </Button>
       </div>

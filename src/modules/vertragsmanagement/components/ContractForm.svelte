@@ -101,9 +101,9 @@
     <form on:submit|preventDefault={handleSubmit} class="p-6 space-y-4">
       <!-- Partner Type Selection -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">
+        <span class="block text-sm font-medium text-gray-900 mb-2">
           Vertragspartner Typ *
-        </label>
+        </span>
         <div class="flex gap-4">
           <button
             type="button"
@@ -132,9 +132,9 @@
 
       <!-- Partner Selection -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">
+        <span class="block text-sm font-medium text-gray-900 mb-2">
           Partner auswählen *
-        </label>
+        </span>
         <div class="space-y-1 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
           {#if formData.partner_type === 'patient'}
             {#if patients.length === 0}
@@ -180,10 +180,11 @@
 
       <!-- Vertrag Name -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="contract-name" class="block text-sm font-medium text-gray-900 mb-1">
           Vertrag Name *
         </label>
         <input
+          id="contract-name"
           type="text"
           bind:value={formData.contract_name}
           required
@@ -193,10 +194,11 @@
 
       <!-- Beschreibung -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="contract-description" class="block text-sm font-medium text-gray-900 mb-1">
           Beschreibung
         </label>
         <textarea
+          id="contract-description"
           bind:value={formData.description}
           rows="2"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -206,10 +208,11 @@
       <!-- Datum Grid -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="contract-start-date" class="block text-sm font-medium text-gray-900 mb-1">
             Start Datum *
           </label>
           <input
+            id="contract-start-date"
             type="date"
             bind:value={formData.start_date}
             required
@@ -217,10 +220,11 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="contract-end-date" class="block text-sm font-medium text-gray-900 mb-1">
             End Datum *
           </label>
           <input
+            id="contract-end-date"
             type="date"
             bind:value={formData.end_date}
             required
@@ -232,20 +236,22 @@
       <!-- Optionale Felder -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="contract-cancellation-period" class="block text-sm font-medium text-gray-900 mb-1">
             Kündigungsfrist (Tage)
           </label>
           <input
+            id="contract-cancellation-period"
             type="number"
             bind:value={formData.cancellation_period_days}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="contract-reminder-days" class="block text-sm font-medium text-gray-900 mb-1">
             Erinnerung vor (Tage)
           </label>
           <input
+            id="contract-reminder-days"
             type="number"
             bind:value={formData.reminder_days_before_expiry}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

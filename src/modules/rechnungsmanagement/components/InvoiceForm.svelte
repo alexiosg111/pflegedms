@@ -107,9 +107,9 @@
     <form on:submit|preventDefault={handleSubmit} class="p-6 space-y-4">
       <!-- Rechnungstyp Selection -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">
+        <span class="block text-sm font-medium text-gray-900 mb-2">
           Rechnungstyp *
-        </label>
+        </span>
         <div class="flex gap-4">
           <button
             type="button"
@@ -138,9 +138,9 @@
 
       <!-- Partner Selection -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-2">
+        <span class="block text-sm font-medium text-gray-900 mb-2">
           Partner auswählen *
-        </label>
+        </span>
         <div class="space-y-1 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
           {#if formData.invoice_type === 'incoming'}
             {#if isLoadingSuppliers}
@@ -186,10 +186,11 @@
 
       <!-- Rechnungsnummer -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="invoice-number" class="block text-sm font-medium text-gray-900 mb-1">
           Rechnungsnummer *
         </label>
         <input
+          id="invoice-number"
           type="text"
           bind:value={formData.invoice_number}
           required
@@ -199,10 +200,11 @@
 
       <!-- Betrag -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="invoice-amount" class="block text-sm font-medium text-gray-900 mb-1">
           Betrag ({formData.currency}) *
         </label>
         <input
+          id="invoice-amount"
           type="number"
           bind:value={formData.amount}
           step="0.01"
@@ -215,10 +217,11 @@
       <!-- Datumfelder -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="invoice-date" class="block text-sm font-medium text-gray-900 mb-1">
             Rechnungsdatum *
           </label>
           <input
+            id="invoice-date"
             type="date"
             bind:value={formData.invoice_date}
             on:change={handleInvoiceDateChange}
@@ -227,10 +230,11 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="invoice-due-date" class="block text-sm font-medium text-gray-900 mb-1">
             Fälligkeitsdatum *
           </label>
           <input
+            id="invoice-due-date"
             type="date"
             bind:value={formData.due_date}
             required
@@ -241,10 +245,11 @@
 
       <!-- Beschreibung & Notizen -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="invoice-description" class="block text-sm font-medium text-gray-900 mb-1">
           Beschreibung
         </label>
         <textarea
+          id="invoice-description"
           bind:value={formData.description}
           rows="2"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -253,10 +258,11 @@
 
       <!-- Zahlungsmethod -->
       <div>
-        <label class="block text-sm font-medium text-gray-900 mb-1">
+        <label for="payment-method" class="block text-sm font-medium text-gray-900 mb-1">
           Zahlungsweise
         </label>
         <input
+          id="payment-method"
           type="text"
           bind:value={formData.payment_method}
           placeholder="z.B. Überweisung"

@@ -87,7 +87,7 @@ export class QMService {
         WHERE parent_folder_id = ?
       `;
       const result = await window.api.queryDatabase(maxSortSql, [input.parent_folder_id || null]);
-      const sortOrder = (result[0] as any).max_order + 1;
+      const sortOrder = ((result[0] as any)?.max_order || 0) + 1;
 
       const sql = `
         INSERT INTO qm_folders (

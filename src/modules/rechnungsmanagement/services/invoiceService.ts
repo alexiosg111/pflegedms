@@ -272,7 +272,7 @@ export class InvoiceService {
     }
 
     // Try to find invoice number
-    const invoiceRegex = /(?:Rechnungsnummer|Rechnung|Invoice\s+#|Rg\.?)\s*:?\s*([A-Z0-9\-\/]{4,20})/i;
+    const invoiceRegex = /(?:Rechnungsnummer|Rechnung|Invoice\s+#|Rg\.?)\s*:?\s*([A-Z0-9-/]{4,20})/i;
     const invoiceMatch = ocrText.match(invoiceRegex);
     if (invoiceMatch) {
       result.invoiceNumber = invoiceMatch[1];
@@ -280,7 +280,7 @@ export class InvoiceService {
     }
 
     // Try to find date (German format DD.MM.YYYY or ISO YYYY-MM-DD)
-    const dateRegex = /(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/;
+    const dateRegex = /(\d{1,2})[./-](\d{1,2})[./-](\d{4})/;
     const dateMatch = ocrText.match(dateRegex);
     if (dateMatch) {
       const [, day, month, year] = dateMatch;

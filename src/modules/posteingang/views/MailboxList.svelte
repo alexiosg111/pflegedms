@@ -3,7 +3,6 @@
   import { mailboxStore, selectedMailboxItem } from '../stores/mailboxStore';
   import { patientStore } from '@modules/patientenakte/stores/patientStore';
   import { toastStore } from '@core/stores/toastStore';
-  import Button from '@core/components/Button.svelte';
   import MailboxCard from '../components/MailboxCard.svelte';
   import AssignmentDialog from '../components/AssignmentDialog.svelte';
 
@@ -130,6 +129,8 @@
     <!-- Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {#each $mailboxStore.items as item (item.id)}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div on:click={() => handleAssignmentRequest(item.id)}>
           <MailboxCard
             {item}

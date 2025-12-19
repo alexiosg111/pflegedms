@@ -195,10 +195,11 @@
 
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-900 mb-1">
+          <label for="folder-name" class="block text-sm font-medium text-gray-900 mb-1">
             Ordnername *
           </label>
           <input
+            id="folder-name"
             type="text"
             bind:value={newFolderName}
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -208,6 +209,7 @@
 
         {#if !newFolderParentId}
           <div>
+            <!-- svelte-ignore a11y-label-has-associated-control -->
             <label class="block text-sm font-medium text-gray-900 mb-2">
               Vorlage (optional)
             </label>
