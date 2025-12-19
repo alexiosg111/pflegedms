@@ -12,7 +12,7 @@ The Pflegedienst Workspace application has been successfully upgraded to version
 - **Performance**: Validated sub-2s startup time and sub-100ms database operation times via stress testing.
 
 ### 2. Quality & Stability
-- **CI/CD Fix**: Resolved `package-lock.json` missing error in CI pipelines by removing it from `.gitignore` and generating it.
+- **CI/CD Fix**: Resolved `package-lock.json` missing error in CI pipelines by removing it from `.gitignore` and ensuring it is tracked in git.
 - **Type Safety**: Achieved 100% TypeScript compliance across Main and Renderer processes.
 - **Dependencies**: Updated and aligned all package versions to resolve conflicts.
 - **Electron Security**: Enabled `contextIsolation` and `sandbox` for production-grade security.
