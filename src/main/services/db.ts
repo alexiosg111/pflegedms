@@ -68,11 +68,29 @@ export class DatabaseService {
     `);
 
     // Read migration files
-    const migrationsDir = path.join(__dirname, '../../migrations');
-    if (!fs.existsSync(migrationsDir)) {
-      console.log('No migrations directory found');
+    // Try different paths to locate migrations (dev vs prod vs build structure)
+    const possiblePaths = [
+      path.join(__dirname, '../../migrations'), // original assumption (wrong for dist structure)
+      path.join(__dirname, '../../../migrations'),
+      path.join(__dirname, '../../../../migrations'), // dist/src/main/services -> root/migrations
+      path.join(process.resourcesPath, 'migrations'), // Electron production resources
+      path.join(app.getAppPath(), 'migrations'),
+    ];
+
+    let migrationsDir = '';
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        migrationsDir = p;
+        break;
+      }
+    }
+
+    if (!migrationsDir) {
+      console.log('No migrations directory found in searched paths:', possiblePaths);
       return;
     }
+    
+    console.log(`Using migrations directory: ${migrationsDir}`);
 
     const migrationFiles = fs
       .readdirSync(migrationsDir)

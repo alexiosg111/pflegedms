@@ -74,6 +74,7 @@
     "artifactName": "${productName}-${version}-${arch}.${ext}",
     "files": [
       "dist/**/*",
+      "migrations/**/*",
       "node_modules/**/*",
       "!node_modules/.bin"
     ],

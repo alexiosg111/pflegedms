@@ -8,10 +8,12 @@
   import InvoiceList from '@modules/rechnungsmanagement/views/InvoiceList.svelte';
   import QMList from '@modules/qm/views/QMList.svelte';
   import SearchDialog from '../components/SearchDialog.svelte';
+  import FeedbackDialog from '../components/FeedbackDialog.svelte';
   import Settings from './Settings.svelte';
 
   let currentPage: string = 'dashboard';
   let showSearchDialog = false;
+  let showFeedbackDialog = false;
   let showSettings = false;
 
   const modules = [
@@ -87,10 +89,22 @@
       {/if}
     </section>
   </main>
+
+  <!-- Feedback Button -->
+  <button
+    on:click={() => (showFeedbackDialog = true)}
+    class="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-40"
+    title="Feedback geben"
+  >
+    💬
+  </button>
 </div>
 
 <!-- Search Dialog -->
 <SearchDialog bind:isOpen={showSearchDialog} />
+
+<!-- Feedback Dialog -->
+<FeedbackDialog isOpen={showFeedbackDialog} on:close={() => (showFeedbackDialog = false)} />
 
 <!-- Settings Dialog -->
 {#if showSettings}
