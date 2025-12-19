@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [main, modular-desktop-pflegedienst-shell]
+    branches: [main, modular-desktop-pflegedienst-shell, investigate-fix-all]
   pull_request:
-    branches: [main, modular-desktop-pflegedienst-shell]
+    branches: [main, modular-desktop-pflegedienst-shell, investigate-fix-all]
 
 jobs:
   build:
