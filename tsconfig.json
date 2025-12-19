@@ -41,12 +41,11 @@
     }
   },
   "include": [
-    "src/**/*",
-    "electron-main.ts",
-    "electron-preload.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
+    "src/main",
     "dist",
     "**/*.test.ts",
     "**/*.spec.ts"

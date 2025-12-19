@@ -19,7 +19,7 @@ export class PatientService {
       `;
       const patients = await window.api.queryDatabase(sql);
       logger.info(`Fetched ${patients.length} patients`);
-      return patients as Patient[];
+      return patients as unknown as Patient[];
     } catch (err) {
       logger.error('Failed to fetch patients', err);
       throw err;
@@ -33,7 +33,7 @@ export class PatientService {
     try {
       const sql = 'SELECT * FROM patients WHERE id = ?';
       const patient = await window.api.queryDatabase(sql, [id]);
-      return patient.length > 0 ? (patient[0] as Patient) : null;
+      return patient.length > 0 ? (patient[0] as unknown as Patient) : null;
     } catch (err) {
       logger.error(`Failed to fetch patient ${id}`, err);
       throw err;
@@ -155,7 +155,7 @@ export class PatientService {
       const searchTerm = `%${query}%`;
       const patients = await window.api.queryDatabase(sql, [searchTerm, searchTerm]);
       logger.info(`Found ${patients.length} patients matching "${query}"`);
-      return patients as Patient[];
+      return patients as unknown as Patient[];
     } catch (err) {
       logger.error(`Failed to search patients for "${query}"`, err);
       throw err;

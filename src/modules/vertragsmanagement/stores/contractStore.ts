@@ -16,7 +16,7 @@ interface ContractState {
 }
 
 function createContractStore() {
-  const { subscribe, set, update } = writable<ContractState>({
+  const { subscribe, update } = writable<ContractState>({
     contracts: [],
     stats: null,
     isLoading: false,

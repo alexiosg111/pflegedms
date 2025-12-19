@@ -18,7 +18,7 @@ export class DocumentService {
         ORDER BY pd.created_at DESC
       `;
       const docs = await window.api.queryDatabase(sql, [patientId]);
-      return docs as PatientDocument[];
+      return docs as unknown as PatientDocument[];
     } catch (err) {
       logger.error(`Failed to fetch documents for patient ${patientId}`, err);
       throw err;
@@ -32,7 +32,7 @@ export class DocumentService {
     try {
       const sql = 'SELECT * FROM documents WHERE id = ?';
       const docs = await window.api.queryDatabase(sql, [documentId]);
-      return docs.length > 0 ? (docs[0] as Document) : null;
+      return docs.length > 0 ? (docs[0] as unknown as Document) : null;
     } catch (err) {
       logger.error(`Failed to fetch document ${documentId}`, err);
       throw err;
@@ -212,7 +212,7 @@ export class DocumentService {
 
       const searchTerm = `%${query}%`;
       const docs = await window.api.queryDatabase(sql, [searchTerm, searchTerm]);
-      return docs as Document[];
+      return docs as unknown as Document[];
     } catch (err) {
       logger.error(`Failed to search documents for "${query}"`, err);
       throw err;

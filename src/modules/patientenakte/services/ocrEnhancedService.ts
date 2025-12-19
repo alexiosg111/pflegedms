@@ -39,9 +39,7 @@ export class OCREnhancedService {
     }
 
     try {
-      this.worker = await Tesseract.createWorker('deu', 1, {
-        cacheType: 'indexeddb',
-      });
+      this.worker = await Tesseract.createWorker('deu', 1);
       logger.info('OCR worker initialized');
       return this.worker;
     } catch (err) {

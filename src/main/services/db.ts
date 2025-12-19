@@ -113,7 +113,7 @@ export class DatabaseService {
 
     try {
       const stmt = this.db.prepare(sql);
-      return params ? stmt.all(...params) : stmt.all();
+      return (params ? stmt.all(...params) : stmt.all()) as T[];
     } catch (err) {
       console.error('Query error:', err);
       throw err;
@@ -128,7 +128,7 @@ export class DatabaseService {
 
     try {
       const stmt = this.db.prepare(sql);
-      return params ? stmt.get(...params) : stmt.get();
+      return (params ? stmt.get(...params) : stmt.get()) as T;
     } catch (err) {
       console.error('Query one error:', err);
       throw err;

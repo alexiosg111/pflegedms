@@ -23,7 +23,7 @@ interface InvoiceState {
 }
 
 function createInvoiceStore() {
-  const { subscribe, set, update } = writable<InvoiceState>({
+  const { subscribe, update } = writable<InvoiceState>({
     invoices: [],
     invoicesByStatus: null,
     stats: null,

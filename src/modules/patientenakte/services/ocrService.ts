@@ -22,17 +22,14 @@ export class OCRService {
     if (this.isInitialized) return;
 
     try {
-      this.worker = await Tesseract.createWorker({
+      this.worker = await Tesseract.createWorker('deu', 1, {
         logger: (m) => {
           if (m.status === 'recognizing') {
             logger.debug(`OCR progress: ${Math.round(m.progress * 100)}%`);
           }
         },
-        langPath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5/tesseract-core.wasm.js',
       });
 
-      await this.worker.loadLanguage('deu'); // German
-      await this.worker.initialize('deu');
       this.isInitialized = true;
       logger.info('OCR worker initialized');
     } catch (err) {

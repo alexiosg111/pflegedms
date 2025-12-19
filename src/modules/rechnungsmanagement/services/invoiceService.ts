@@ -25,7 +25,7 @@ export class InvoiceService {
       `;
       const invoices = await window.api.queryDatabase(sql);
       logger.info(`Fetched ${invoices.length} invoices`);
-      return invoices as Invoice[];
+      return invoices as unknown as Invoice[];
     } catch (err) {
       logger.error('Failed to fetch invoices', err);
       throw err;
@@ -46,7 +46,7 @@ export class InvoiceService {
         END
       `;
       const invoices = await window.api.queryDatabase(sql, [status]);
-      return invoices as Invoice[];
+      return invoices as unknown as Invoice[];
     } catch (err) {
       logger.error(`Failed to fetch invoices for status ${status}`, err);
       throw err;
@@ -77,7 +77,7 @@ export class InvoiceService {
     try {
       const sql = 'SELECT * FROM invoices WHERE id = ?';
       const invoices = await window.api.queryDatabase(sql, [id]);
-      return invoices.length > 0 ? (invoices[0] as Invoice) : null;
+      return invoices.length > 0 ? (invoices[0] as unknown as Invoice) : null;
     } catch (err) {
       logger.error(`Failed to fetch invoice ${id}`, err);
       throw err;
@@ -242,7 +242,7 @@ export class InvoiceService {
         FROM invoices
       `;
       const result = await window.api.queryDatabase(sql);
-      return result[0] as InvoiceStats;
+      return result[0] as unknown as InvoiceStats;
     } catch (err) {
       logger.error('Failed to fetch invoice stats', err);
       throw err;

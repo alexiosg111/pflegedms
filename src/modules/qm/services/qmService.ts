@@ -26,7 +26,7 @@ export class QMService {
       `;
       const folders = await window.api.queryDatabase(sql);
       logger.info(`Fetched ${folders.length} QM folders`);
-      return folders as QMFolder[];
+      return folders as unknown as QMFolder[];
     } catch (err) {
       logger.error('Failed to fetch QM folders', err);
       throw err;
@@ -66,7 +66,7 @@ export class QMService {
     try {
       const sql = 'SELECT * FROM qm_folders WHERE id = ?';
       const folders = await window.api.queryDatabase(sql, [id]);
-      return folders.length > 0 ? (folders[0] as QMFolder) : null;
+      return folders.length > 0 ? (folders[0] as unknown as QMFolder) : null;
     } catch (err) {
       logger.error(`Failed to fetch QM folder ${id}`, err);
       throw err;
@@ -181,7 +181,7 @@ export class QMService {
         ORDER BY folder_id, created_at DESC
       `;
       const documents = await window.api.queryDatabase(sql);
-      return documents as QMDocument[];
+      return documents as unknown as QMDocument[];
     } catch (err) {
       logger.error('Failed to fetch QM documents', err);
       throw err;
@@ -199,7 +199,7 @@ export class QMService {
         ORDER BY created_at DESC
       `;
       const documents = await window.api.queryDatabase(sql, [folderId]);
-      return documents as QMDocument[];
+      return documents as unknown as QMDocument[];
     } catch (err) {
       logger.error(`Failed to fetch QM documents for folder ${folderId}`, err);
       throw err;
@@ -213,7 +213,7 @@ export class QMService {
     try {
       const sql = 'SELECT * FROM qm_documents WHERE id = ? AND is_current_version = 1';
       const documents = await window.api.queryDatabase(sql, [id]);
-      return documents.length > 0 ? (documents[0] as QMDocument) : null;
+      return documents.length > 0 ? (documents[0] as unknown as QMDocument) : null;
     } catch (err) {
       logger.error(`Failed to fetch QM document ${id}`, err);
       throw err;
@@ -234,7 +234,7 @@ export class QMService {
         ORDER BY version_major DESC, version_minor DESC
       `;
       const versions = await window.api.queryDatabase(sql, [documentId]);
-      return versions as QMDocumentVersion[];
+      return versions as unknown as QMDocumentVersion[];
     } catch (err) {
       logger.error(`Failed to fetch versions for document ${documentId}`, err);
       throw err;

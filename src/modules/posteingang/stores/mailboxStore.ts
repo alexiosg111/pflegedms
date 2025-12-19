@@ -17,7 +17,7 @@ interface MailboxState {
 }
 
 function createMailboxStore() {
-  const { subscribe, set, update } = writable<MailboxState>({
+  const { subscribe, update } = writable<MailboxState>({
     items: [],
     stats: null,
     isLoading: false,

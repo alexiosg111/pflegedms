@@ -21,7 +21,7 @@ export class MailboxService {
       `;
       const items = await window.api.queryDatabase(sql);
       logger.info(`Fetched ${items.length} mailbox items`);
-      return items as MailboxItem[];
+      return items as unknown as MailboxItem[];
     } catch (err) {
       logger.error('Failed to fetch mailbox items', err);
       throw err;
@@ -41,7 +41,7 @@ export class MailboxService {
           created_at DESC
       `;
       const items = await window.api.queryDatabase(sql, [status]);
-      return items as MailboxItem[];
+      return items as unknown as MailboxItem[];
     } catch (err) {
       logger.error(`Failed to fetch mailbox items for status ${status}`, err);
       throw err;
@@ -63,7 +63,7 @@ export class MailboxService {
         WHERE status != 'rejected'
       `;
       const result = await window.api.queryDatabase(sql);
-      return result[0] as MailboxStats;
+      return result[0] as unknown as MailboxStats;
     } catch (err) {
       logger.error('Failed to fetch mailbox stats', err);
       throw err;
@@ -119,7 +119,7 @@ export class MailboxService {
     try {
       const sql = 'SELECT * FROM mailbox_items WHERE id = ?';
       const items = await window.api.queryDatabase(sql, [id]);
-      return items.length > 0 ? (items[0] as MailboxItem) : null;
+      return items.length > 0 ? (items[0] as unknown as MailboxItem) : null;
     } catch (err) {
       logger.error(`Failed to fetch mailbox item ${id}`, err);
       throw err;

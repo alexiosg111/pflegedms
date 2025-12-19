@@ -168,7 +168,7 @@ export class ExportService {
     try {
       const sql = `SELECT COUNT(*) as count FROM ${tableName}`;
       const result = await window.api.queryDatabase(sql);
-      return result[0]?.count || 0;
+      return (result[0] as any)?.count || 0;
     } catch (err) {
       logger.error(`Count query failed for table ${tableName}`, err);
       return 0;

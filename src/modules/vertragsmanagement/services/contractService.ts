@@ -27,7 +27,7 @@ export class ContractService {
       `;
       const contracts = await window.api.queryDatabase(sql);
       logger.info(`Fetched ${contracts.length} contracts`);
-      return contracts as Contract[];
+      return contracts as unknown as Contract[];
     } catch (err) {
       logger.error('Failed to fetch contracts', err);
       throw err;
@@ -41,7 +41,7 @@ export class ContractService {
     try {
       const sql = 'SELECT * FROM contracts WHERE id = ?';
       const contracts = await window.api.queryDatabase(sql, [id]);
-      return contracts.length > 0 ? (contracts[0] as Contract) : null;
+      return contracts.length > 0 ? (contracts[0] as unknown as Contract) : null;
     } catch (err) {
       logger.error(`Failed to fetch contract ${id}`, err);
       throw err;
@@ -160,7 +160,7 @@ export class ContractService {
         ORDER BY end_date ASC
       `;
       const contracts = await window.api.queryDatabase(sql);
-      return contracts as ExpiringContract[];
+      return contracts as unknown as ExpiringContract[];
     } catch (err) {
       logger.error('Failed to fetch expiring contracts', err);
       throw err;
@@ -184,7 +184,7 @@ export class ContractService {
         FROM contracts
       `;
       const result = await window.api.queryDatabase(sql);
-      return result[0] as ContractStats;
+      return result[0] as unknown as ContractStats;
     } catch (err) {
       logger.error('Failed to fetch contract stats', err);
       throw err;
@@ -216,7 +216,7 @@ export class ContractService {
         ORDER BY name ASC
       `;
       const suppliers = await window.api.queryDatabase(sql);
-      return suppliers as Supplier[];
+      return suppliers as unknown as Supplier[];
     } catch (err) {
       logger.error('Failed to fetch suppliers', err);
       throw err;
@@ -277,7 +277,7 @@ export class ContractService {
     try {
       const sql = 'SELECT * FROM suppliers WHERE id = ?';
       const suppliers = await window.api.queryDatabase(sql, [id]);
-      return suppliers.length > 0 ? (suppliers[0] as Supplier) : null;
+      return suppliers.length > 0 ? (suppliers[0] as unknown as Supplier) : null;
     } catch (err) {
       logger.error(`Failed to fetch supplier ${id}`, err);
       throw err;

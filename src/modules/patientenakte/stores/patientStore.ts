@@ -15,7 +15,7 @@ interface PatientState {
 }
 
 function createPatientStore() {
-  const { subscribe, set, update } = writable<PatientState>({
+  const { subscribe, update } = writable<PatientState>({
     patients: [],
     isLoading: false,
     error: null,

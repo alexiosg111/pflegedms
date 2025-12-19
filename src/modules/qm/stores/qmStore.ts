@@ -18,7 +18,7 @@ interface QMState {
 }
 
 function createQMStore() {
-  const { subscribe, set, update } = writable<QMState>({
+  const { subscribe, update } = writable<QMState>({
     folders: [],
     folderTree: [],
     documents: [],

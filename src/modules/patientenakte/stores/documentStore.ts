@@ -17,7 +17,7 @@ interface DocumentState {
 }
 
 function createDocumentStore() {
-  const { subscribe, set, update } = writable<DocumentState>({
+  const { subscribe, update } = writable<DocumentState>({
     documents: [],
     isLoading: false,
     isUploading: false,
