@@ -2,7 +2,7 @@
 
 ## Überblick
 
-Dieses Projekt ist so konfiguriert, dass automatisch Desktop-Installer für Windows (.exe), macOS (.dmg) und Linux (.AppImage/.deb) erstellt werden, wenn ein neuer Release-Tag erstellt wird.
+Dieses Projekt ist so konfiguriert, dass automatisch Desktop-Installer für Windows (.exe) und macOS (.dmg) erstellt werden, wenn ein neuer Release-Tag erstellt wird.
 
 ## Wie funktioniert es?
 
@@ -48,7 +48,6 @@ Sobald der Tag gepusht wurde:
 2. Der Workflow baut die App für alle Plattformen:
    - Windows: `PflegeDMS-Setup-1.0.0.exe` (Installer) und `PflegeDMS-1.0.0.exe` (Portable)
    - macOS: `PflegeDMS-1.0.0.dmg` (Intel) und `PflegeDMS-1.0.0-arm64.dmg` (Apple Silicon)
-   - Linux: `PflegeDMS-1.0.0.AppImage` und `pflegedms_1.0.0_amd64.deb`
 3. Ein neuer GitHub Release wird automatisch erstellt
 4. Alle Installer werden dem Release hinzugefügt
 
@@ -63,14 +62,13 @@ Benutzer können auf die [Releases-Seite](https://github.com/alexiosg111/pfleged
 
 - **Windows-Benutzer**: Die `.exe` Datei herunterladen und installieren
 - **macOS-Benutzer**: Die `.dmg` Datei herunterladen und installieren
-- **Linux-Benutzer**: Die `.AppImage` oder `.deb` Datei herunterladen
 
 ## Workflow-Details
 
 Der Workflow (`.github/workflows/build-release.yml`):
 
 - **Trigger**: Läuft bei jedem `v*` Tag (z.B. `v1.0.0`, `v2.1.0`)
-- **Plattformen**: Baut auf Windows, macOS und Linux
+- **Plattformen**: Baut auf Windows und macOS
 - **Artifacts**: Speichert alle Installer als Build-Artifacts
 - **Release**: Erstellt automatisch einen GitHub Release mit allen Dateien
 
@@ -85,7 +83,6 @@ npm run electron:build
 # Spezifische Plattformen
 npm run electron:build:win    # Windows
 npm run electron:build:mac    # macOS
-npm run electron:build:linux  # Linux
 ```
 
 Die fertigen Installer finden Sie im `release/` Ordner.
@@ -115,4 +112,3 @@ Die fertigen Installer finden Sie im `release/` Ordner.
 
 1. Windows: Benutzer müssen eventuell SmartScreen überspringen (nicht signiert)
 2. macOS: Benutzer müssen die App über "Sicherheit & Datenschutz" freigeben
-3. Linux: AppImage muss ausführbar gemacht werden (`chmod +x`)
