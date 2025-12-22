@@ -23,6 +23,7 @@
   "build": {
     "appId": "com.pflegedms.app",
     "productName": "PflegeDMS",
+    "publish": null,
     "files": [
       "electron/**/*",
       "build/**/*",
