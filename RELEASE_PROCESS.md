@@ -12,7 +12,7 @@ Das Problem war, dass **Git-Tags** fehlten. Die GitHub Actions sind so konfiguri
 
 1. **Alte Branches gelöscht** - Repository ist jetzt sauber
 2. **Tag v1.0.0 erstellt** - Erstes Release wird jetzt automatisch gebaut
-3. **GitHub Actions läuft** - .exe/.dmg/.AppImage werden erstellt
+3. **GitHub Actions läuft** - .exe/.dmg werden erstellt
 
 ## 📋 Korrekter Release-Prozess:
 
@@ -38,7 +38,6 @@ git push origin v1.1.0
 ### Schritt 4: GitHub Actions läuft automatisch
 - ✅ Windows: `.exe` Installer werden erstellt
 - ✅ macOS: `.dmg` und `.zip` werden erstellt  
-- ✅ Linux: `.AppImage` und `.deb` werden erstellt
 - ✅ Release wird automatisch auf GitHub erstellt
 
 ## 📦 Erwartete Artefakte:
@@ -48,8 +47,6 @@ Nach dem Tag-Push findest du in den GitHub Releases:
 - **Windows**: `PflegeDMS 1.1.0.exe` (Portable)
 - **macOS**: `PflegeDMS-1.1.0.dmg` (DMG Installer)
 - **macOS**: `PflegeDMS-1.1.0-mac.zip` (ZIP Archive)
-- **Linux**: `PflegeDMS-1.1.0.AppImage` (AppImage)
-- **Linux**: `pflegedms_1.1.0_amd64.deb` (Debian Package)
 
 ## 🔄 Workflow-Details:
 
