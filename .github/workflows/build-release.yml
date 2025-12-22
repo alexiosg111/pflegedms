@@ -1,5 +1,11 @@
 name: Build and Release
 
+<<<<<<< HEAD
+=======
+permissions:
+  contents: write
+
+>>>>>>> fix-electron-builder-invalid-png-checksum
 on:
   push:
     tags:
@@ -68,6 +74,7 @@ jobs:
         with:
           path: artifacts
           
+<<<<<<< HEAD
       - name: List available artifacts
         run: |
           echo "Available artifacts:"
@@ -88,3 +95,16 @@ jobs:
           path: |
             artifacts/windows-installers/*
             artifacts/macos-installers/*
+=======
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/windows-installers/*
+            artifacts/macos-installers/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> fix-electron-builder-invalid-png-checksum
