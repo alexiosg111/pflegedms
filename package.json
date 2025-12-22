@@ -4,7 +4,10 @@
   "description": "PflegeDMS - Pflegedienst Management System",
   "type": "module",
   "main": "electron/main.js",
-  "author": "PflegeDMS Team",
+  "author": {
+    "name": "PflegeDMS Team",
+    "email": "team@pflegedms.de"
+  },
   "license": "MIT",
   "scripts": {
     "dev": "vite",
