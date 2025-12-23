@@ -74,6 +74,21 @@ jobs:
       - name: Build Electron app (Windows)
         run: npm run electron:build:win
 
+      - name: Ensure legacy Windows artifact path exists
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "release\\win-unpacked" | Out-Null
+          "placeholder" | Out-File -FilePath "release\\win-unpacked\\.ci-placeholder" -Encoding utf8
+
+      - name: Upload Windows unpacked artifact (legacy)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-unpacked
+          path: release/win-unpacked
+          if-no-files-found: warn
+
       - name: Upload Windows artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -111,6 +126,25 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
+      - name: Ensure legacy macOS artifact paths exist
+        if: always()
+        run: |
+          mkdir -p release/mac
+          echo "placeholder" > release/mac/.ci-placeholder
+
+      - name: Upload macOS unpacked artifact (legacy)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-unpacked
+          path: |
+            release/mac
+            release/mac-arm64
+            release/mac-x64
+            release/mac-universal
+            release/mac-unpacked
+          if-no-files-found: warn
+
       - name: Upload macOS artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -133,11 +167,25 @@ jobs:
           path: artifacts/windows-artifacts
         continue-on-error: true
 
+      - name: Download Windows unpacked artifact (legacy)
+        uses: actions/download-artifact@v4
+        with:
+          name: win-unpacked
+          path: artifacts/win-unpacked
+        continue-on-error: true
+
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
           name: macos-artifacts
           path: artifacts/macos-artifacts
+        continue-on-error: true
+
+      - name: Download macOS unpacked artifact (legacy)
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-unpacked
+          path: artifacts/mac-unpacked
         continue-on-error: true
 
       - name: Download web build artifacts
@@ -163,23 +211,29 @@ jobs:
           mkdir -p release/windows
           mkdir -p release/macos
 
-          # Move Windows artifacts if they exist
-          if [ -d "artifacts/windows-artifacts" ]; then
-            echo "✅ Found Windows artifacts"
+          # Move Windows artifacts if they exist (prefer full release/ artifact, fall back to legacy dir artifact)
+          if [ -d "artifacts/windows-artifacts" ] && [ -n "$(ls -A artifacts/windows-artifacts 2>/dev/null)" ]; then
+            echo "✅ Found Windows artifacts (windows-artifacts)"
             cp -r artifacts/windows-artifacts/* release/windows/ || true
-            ls -la release/windows/
+          elif [ -d "artifacts/win-unpacked" ] && [ -n "$(ls -A artifacts/win-unpacked 2>/dev/null)" ]; then
+            echo "✅ Found Windows artifacts (win-unpacked legacy)"
+            cp -r artifacts/win-unpacked/* release/windows/ || true
           else
             echo "⚠️  Windows artifacts not found"
           fi
+          ls -la release/windows/ || true
 
-          # Move macOS artifacts if they exist
-          if [ -d "artifacts/macos-artifacts" ]; then
-            echo "✅ Found macOS artifacts"
+          # Move macOS artifacts if they exist (prefer full release/ artifact, fall back to legacy dir artifact)
+          if [ -d "artifacts/macos-artifacts" ] && [ -n "$(ls -A artifacts/macos-artifacts 2>/dev/null)" ]; then
+            echo "✅ Found macOS artifacts (macos-artifacts)"
             cp -r artifacts/macos-artifacts/* release/macos/ || true
-            ls -la release/macos/
+          elif [ -d "artifacts/mac-unpacked" ] && [ -n "$(ls -A artifacts/mac-unpacked 2>/dev/null)" ]; then
+            echo "✅ Found macOS artifacts (mac-unpacked legacy)"
+            cp -r artifacts/mac-unpacked/* release/macos/ || true
           else
             echo "⚠️  macOS artifacts not found"
           fi
+          ls -la release/macos/ || true
 
           # Move web build for reference
           if [ -d "artifacts/web-build" ]; then
