@@ -18,3 +18,8 @@ mac:
     - target: dir
   icon: assets/icon.png
   category: public.app-category.healthcare-fitness
+linux:
+  target:
+    - target: dir
+  icon: assets/icon.png
+  category: public.app-category.healthcare-fitness
