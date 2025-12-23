@@ -150,8 +150,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+        continue-on-error: true
 
       - name: List downloaded artifacts
+        if: always()
         run: |
           echo "📋 Available artifacts:"
           find artifacts -type f 2>/dev/null | sort || echo "⚠️  No artifacts found!"
@@ -160,6 +162,7 @@ jobs:
           ls -la artifacts/ 2>/dev/null || echo "⚠️  Artifacts directory is empty!"
 
       - name: Organize artifacts
+        if: always()
         run: |
           echo "📦 Organizing downloaded artifacts..."
           mkdir -p release/windows
