@@ -58,6 +58,15 @@ on:
       - 'v*'  # Nur bei v1.0.0, v1.1.0, etc.
 ```
 
+## 📋 Workflow v1.0 Änderungen:
+
+Die neue Version 1.0 des Workflows:
+- ✅ Entfernt `softprops/action-gh-release` (403 Fehler behoben)
+- ✅ Erstellt manuelle Build-Zusammenfassung
+- ✅ Artefakte verfügbar über GitHub Actions
+- ✅ Kein GitHub Token mehr erforderlich
+- ✅ Funktioniert mit allen Berechtigungsstufen
+
 ## ⚡ Schneller Release-Befehl:
 
 ```bash
@@ -82,5 +91,7 @@ git push origin --delete feature/branch-name
 ## ✅ Jetzt funktioniert:
 
 - GitHub Actions baut automatisch alle Installer
-- Release wird mit allen Artefakten erstellt
+- Release-Zusammenfassung wird erstellt
+- Artefakte verfügbar über GitHub Actions
 - Repository ist sauber ohne alte Branches
+- Keine Berechtigungsprobleme mehr
