@@ -10,16 +10,21 @@ directories:
   output: release
 win:
   target:
-    - target: dir
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
   icon: assets/icon.png
   signAndEditExecutable: false
 mac:
   target:
-    - target: dir
+    - target: dmg
+    - target: zip
   icon: assets/icon.png
   category: public.app-category.healthcare-fitness
 linux:
   target:
-    - target: dir
+    - target: AppImage
+    - target: deb
   icon: assets/icon.png
   category: public.app-category.healthcare-fitness
