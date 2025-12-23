@@ -21,8 +21,8 @@ permissions:
   packages: write
 
 jobs:
-  build-and-release:
-    name: Build and Release
+  build-web:
+    name: Build Web App
     runs-on: ubuntu-latest
     
     steps:
@@ -41,20 +41,93 @@ jobs:
       - name: Build SvelteKit app
         run: npm run build
         
+      - name: Upload web build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/
+
+  build-windows:
+    name: Build Windows App
+    runs-on: windows-latest
+    needs: build-web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Download web build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/
+          
       - name: Build Electron app (Windows)
         run: npm run electron:build:win
+
+  build-macos:
+    name: Build macOS App
+    runs-on: macos-latest
+    needs: build-web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
         
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Download web build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/
+          
       - name: Build Electron app (macOS)
         run: npm run electron:build:mac
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
+
+  collect-artifacts:
+    name: Collect and Upload Artifacts
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-macos]
+    
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: win-unpacked
+          path: release/windows/
+          
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-unpacked
+          path: release/macos/
           
       - name: Upload all artifacts
         uses: actions/upload-artifact@v4
         with:
           name: pflegedms-installers
           path: |
-            release/**/*
+            release/windows/**/*
+            release/macos/**/*
 
       - name: Create Release Summary
         if: startsWith(github.ref, 'refs/tags/')
@@ -63,7 +136,11 @@ jobs:
           echo "" >> release_summary.md
           echo "## 📦 Available Installers" >> release_summary.md
           echo "" >> release_summary.md
-          ls -la release/ >> release_summary.md || echo "No files found in release directory" >> release_summary.md
+          echo "### Windows Build" >> release_summary.md
+          echo "- Built on Windows runner using native tools" >> release_summary.md
+          echo "" >> release_summary.md
+          echo "### macOS Build" >> release_summary.md
+          echo "- Built on macOS runner using native tools" >> release_summary.md
           echo "" >> release_summary.md
           echo "## 📥 Download from GitHub Actions" >> release_summary.md
           echo "1. Go to Actions tab → Latest run → Artifacts section" >> release_summary.md
