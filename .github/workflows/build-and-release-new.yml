@@ -74,22 +74,6 @@ jobs:
       - name: Build Electron app (Windows)
         run: npm run electron:build:win
 
-      - name: Check Windows build output
-        if: always()
-        run: |
-          echo "📁 Windows release directory contents:"
-          if [ -d "release/" ]; then
-            FILE_COUNT=$(find release/ -type f | wc -l)
-            echo "Files found in release/: $FILE_COUNT"
-            if [ "$FILE_COUNT" -gt 0 ]; then
-              ls -laR release/ | head -100
-            else
-              echo "⚠️  release/ directory is empty!"
-            fi
-          else
-            echo "❌ release/ directory does not exist!"
-          fi
-
       - name: Upload Windows artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -126,22 +110,6 @@ jobs:
         run: npm run electron:build:mac
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-
-      - name: Check macOS build output
-        if: always()
-        run: |
-          echo "📁 macOS release directory contents:"
-          if [ -d "release/" ]; then
-            FILE_COUNT=$(find release/ -type f | wc -l)
-            echo "Files found in release/: $FILE_COUNT"
-            if [ "$FILE_COUNT" -gt 0 ]; then
-              ls -laR release/ | head -100
-            else
-              echo "⚠️  release/ directory is empty!"
-            fi
-          else
-            echo "❌ release/ directory does not exist!"
-          fi
 
       - name: Upload macOS artifacts
         if: always()
