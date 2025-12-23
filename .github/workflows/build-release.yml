@@ -1,11 +1,9 @@
 name: Build and Release
 
-<<<<<<< HEAD
-=======
 permissions:
   contents: write
-
->>>>>>> fix-electron-builder-invalid-png-checksum
+  packages: write
+  releases: write
 on:
   push:
     tags:
@@ -74,28 +72,6 @@ jobs:
         with:
           path: artifacts
           
-<<<<<<< HEAD
-      - name: List available artifacts
-        run: |
-          echo "Available artifacts:"
-          find artifacts -name "*.exe" -o -name "*.dmg" -o -name "*.zip" | head -10
-          
-      - name: Create Release (Manual)
-        run: |
-          echo "Build completed successfully!"
-          echo "Artifacts are available as GitHub Actions downloads."
-          echo "Tag: ${{ github.ref_name }}"
-          echo "Build time: $(date)"
-          
-      - name: Upload Release Assets
-        if: false
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-assets
-          path: |
-            artifacts/windows-installers/*
-            artifacts/macos-installers/*
-=======
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -107,4 +83,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> fix-electron-builder-invalid-png-checksum
