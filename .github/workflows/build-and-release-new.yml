@@ -24,23 +24,23 @@ jobs:
   build-web:
     name: Build Web App
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build SvelteKit app
         run: npm run build
-        
+
       - name: Upload web build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -51,26 +51,26 @@ jobs:
     name: Build Windows App
     runs-on: windows-latest
     needs: build-web
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Download web build artifacts
         uses: actions/download-artifact@v4
         with:
           name: web-build
           path: build/
-          
+
       - name: Build Electron app (Windows)
         run: npm run electron:build:win
 
@@ -86,26 +86,26 @@ jobs:
     name: Build macOS App
     runs-on: macos-latest
     needs: build-web
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Download web build artifacts
         uses: actions/download-artifact@v4
         with:
           name: web-build
           path: build/
-          
+
       - name: Build Electron app (macOS)
         run: npm run electron:build:mac
         env:
@@ -126,10 +126,25 @@ jobs:
     if: always()
 
     steps:
-      - name: Download all artifacts
+      - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: windows-artifacts
+          path: artifacts/windows-artifacts
+        continue-on-error: true
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-artifacts
+          path: artifacts/macos-artifacts
+        continue-on-error: true
+
+      - name: Download web build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: artifacts/web-build
         continue-on-error: true
 
       - name: List downloaded artifacts
@@ -182,7 +197,7 @@ jobs:
           echo "" >> release_summary.md
           echo "## 📦 Available Installers" >> release_summary.md
           echo "" >> release_summary.md
-          
+
           if [ -d "release/windows" ] && [ -n "$(ls -A release/windows/ 2>/dev/null)" ]; then
             echo "✅ **Windows Build Available**" >> release_summary.md
             echo "- Built on windows-latest runner with native tools" >> release_summary.md
@@ -190,9 +205,9 @@ jobs:
           else
             echo "❌ **Windows Build Failed or Not Available**" >> release_summary.md
           fi
-          
+
           echo "" >> release_summary.md
-          
+
           if [ -d "release/macos" ] && [ -n "$(ls -A release/macos/ 2>/dev/null)" ]; then
             echo "✅ **macOS Build Available**" >> release_summary.md
             echo "- Built on macos-latest runner with native tools" >> release_summary.md
@@ -200,7 +215,7 @@ jobs:
           else
             echo "❌ **macOS Build Failed or Not Available**" >> release_summary.md
           fi
-          
+
           echo "" >> release_summary.md
           echo "## 📥 Download Instructions" >> release_summary.md
           echo "" >> release_summary.md
@@ -215,7 +230,7 @@ jobs:
           echo "- **Build Date:** $(date)" >> release_summary.md
           echo "- **Build Platforms:** Cross-platform (Windows, macOS)" >> release_summary.md
           echo "- **Build System:** GitHub Actions with native platform runners" >> release_summary.md
-          
+
       - name: Upload Release Summary
         if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
@@ -227,21 +242,21 @@ jobs:
     name: Auto Version Bump
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: Bump and commit version
         run: |
           npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
-          
+
       - name: Push version changes
         run: |
           git config user.name "GitHub Actions Bot"
@@ -249,7 +264,7 @@ jobs:
           git add package.json package-lock.json
           git commit -m "Bump version"
           git push origin main
-          
+
       - name: Create and push version tag
         run: |
           NEW_VERSION=$(node -p "require('./package.json').version")
