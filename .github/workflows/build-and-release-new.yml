@@ -124,7 +124,44 @@ jobs:
           
       - name: Build Electron app (macOS)
         id: build_macos
-        run: npm run electron:build:mac
+        run: |
+          echo "🔨 Starting macOS build process..."
+          set -e  # Exit on any error
+          
+          echo "📋 Build environment info:"
+          echo "Node version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "Electron builder version: $(npx electron-builder --version)"
+          
+          echo "📁 Checking build prerequisites..."
+          echo "Build directory exists: $([ -d "build" ] && echo "✅" || echo "❌")"
+          echo "Electron directory exists: $([ -d "electron" ] && echo "✅" || echo "❌")"
+          echo "Assets directory exists: $([ -d "assets" ] && echo "✅" || echo "❌")"
+          
+          echo "🚀 Running macOS build..."
+          npm run electron:build:mac || {
+            echo "❌ macOS build failed with exit code: $?"
+            echo "🔍 Build output directory contents:"
+            ls -la release/ || echo "No release directory created"
+            exit 1
+          }
+          
+          echo "✅ macOS build completed successfully"
+          echo "📦 Verifying build artifacts..."
+          if [ -d "release/mac" ]; then
+            echo "✅ Release directory found"
+            ls -la release/mac/
+            echo "📋 macOS app bundle details:"
+            if [ -d "release/mac/PflegeDMS.app" ]; then
+              echo "✅ PflegeDMS.app bundle found"
+              find release/mac/PflegeDMS.app -type f -name "*.app" -o -name "*.dSYM" | head -10
+            else
+              echo "⚠️ PflegeDMS.app bundle not found"
+            fi
+          else
+            echo "❌ Release directory not found"
+            exit 1
+          fi
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
@@ -143,8 +180,38 @@ jobs:
           fi
 
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
         if: steps.build_macos.outcome == 'success'
+        run: |
+          echo "📦 Preparing macOS artifact upload..."
+          
+          # Verify the directory exists and has content
+          if [ ! -d "release/mac" ]; then
+            echo "❌ release/mac directory does not exist"
+            echo "Available release directories:"
+            ls -la release/ || echo "No release directory found"
+            exit 1
+          fi
+          
+          echo "📋 Release/mac directory contents:"
+          ls -la release/mac/
+          
+          # Check if there are actual files to upload
+          FILE_COUNT=$(find release/mac/ -type f | wc -l)
+          echo "📊 File count in release/mac/: $FILE_COUNT"
+          
+          if [ "$FILE_COUNT" -eq 0 ]; then
+            echo "❌ No files found in release/mac/ directory"
+            exit 1
+          fi
+          
+          echo "✅ Found $FILE_COUNT files to upload"
+          
+          # Show what will be uploaded
+          echo "🔍 Files to be uploaded:"
+          find release/mac/ -type f | head -20
+          
+          echo "🚀 Uploading macOS artifacts..."
+        uses: actions/upload-artifact@v4
         with:
           name: mac-unpacked
           path: release/mac/
