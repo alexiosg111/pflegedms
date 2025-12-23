@@ -1,0 +1,19 @@
+appId: com.pflegedms.app
+productName: PflegeDMS
+publish: null
+files:
+  - electron/**/*
+  - build/**/*
+  - assets/**/*
+directories:
+  buildResources: assets
+  output: release
+win:
+  target:
+    - target: dir
+  icon: assets/icon.png
+mac:
+  target:
+    - target: dir
+  icon: assets/icon.png
+  category: public.app-category.healthcare-fitness
