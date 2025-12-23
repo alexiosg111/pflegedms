@@ -72,30 +72,14 @@ jobs:
           path: build/
           
       - name: Build Electron app (Windows)
-        id: build_windows
         run: npm run electron:build:win
 
-      - name: Verify Windows build output
-        if: steps.build_windows.outcome == 'success'
-        run: |
-          echo "Checking for Windows build artifacts..."
-          ls -la release/ || true
-          if [ -d "release/win-unpacked" ]; then
-            echo "✅ Windows build artifacts found"
-            ls -la release/win-unpacked/
-          else
-            echo "⚠️  Windows build artifacts not found in release/win-unpacked/"
-            echo "Contents of release/ directory:"
-            find release/ -maxdepth 2 -type d
-          fi
-        shell: bash
-
       - name: Upload Windows artifacts
+        if: always()
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
-          name: win-unpacked
-          path: release/win-unpacked/
+          name: windows-artifacts
+          path: release/
           if-no-files-found: warn
 
   build-macos:
@@ -123,175 +107,62 @@ jobs:
           path: build/
           
       - name: Build Electron app (macOS)
-        id: build_macos
-        run: |
-          echo "🔨 Starting macOS build process..."
-          set -e  # Exit on any error
-          
-          echo "📋 Build environment info:"
-          echo "Node version: $(node --version)"
-          echo "npm version: $(npm --version)"
-          echo "Electron builder version: $(npx electron-builder --version)"
-          
-          echo "📁 Checking build prerequisites..."
-          echo "Build directory exists: $([ -d "build" ] && echo "✅" || echo "❌")"
-          echo "Electron directory exists: $([ -d "electron" ] && echo "✅" || echo "❌")"
-          echo "Assets directory exists: $([ -d "assets" ] && echo "✅" || echo "❌")"
-          
-          echo "🚀 Running macOS build..."
-          npm run electron:build:mac || {
-            echo "❌ macOS build failed with exit code: $?"
-            echo "🔍 Build output directory contents:"
-            ls -la release/ || echo "No release directory created"
-            exit 1
-          }
-          
-          echo "✅ macOS build completed successfully"
-          echo "📦 Verifying build artifacts..."
-          
-          # Find the actual macOS build directory created by electron-builder
-          echo "🔍 Looking for macOS build artifacts..."
-          if [ -d "release" ]; then
-            echo "📁 Release directory contents:"
-            ls -la release/
-            
-            # Look for any .app directory or darwin build directory
-            MAC_BUILD_DIR=""
-            if [ -d "release/PflegeDMS.app" ]; then
-              MAC_BUILD_DIR="release/PflegeDMS.app"
-              echo "✅ Found PflegeDMS.app in release/"
-            elif [ -d "release/PflegeDMS-darwin-x64" ]; then
-              MAC_BUILD_DIR="release/PflegeDMS-darwin-x64"
-              echo "✅ Found PflegeDMS-darwin-x64 in release/"
-            else
-              # Look for any .app directories in release/
-              APP_DIRS=$(find release/ -maxdepth 2 -name "*.app" -type d)
-              if [ -n "$APP_DIRS" ]; then
-                MAC_BUILD_DIR=$(echo "$APP_DIRS" | head -n 1)
-                echo "✅ Found .app directory: $MAC_BUILD_DIR"
-              else
-                echo "❌ No .app directory found in release/"
-                echo "Available contents:"
-                find release/ -maxdepth 3 -type d
-                exit 1
-              fi
-            fi
-            
-            echo "📋 Using macOS build directory: $MAC_BUILD_DIR"
-            echo "Contents of $MAC_BUILD_DIR:"
-            ls -la "$MAC_BUILD_DIR/"
-            
-            # Save the actual build directory path for later steps
-            echo "MAC_BUILD_DIR=$MAC_BUILD_DIR" >> $GITHUB_ENV
-            
-          else
-            echo "❌ Release directory not found"
-            exit 1
-          fi
+        run: npm run electron:build:mac
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Verify macOS build output
-        if: steps.build_macos.outcome == 'success'
-        run: |
-          echo "Checking for macOS build artifacts..."
-          echo "Environment variable MAC_BUILD_DIR: ${MAC_BUILD_DIR:-not set}"
-          
-          if [ -n "$MAC_BUILD_DIR" ] && [ -d "$MAC_BUILD_DIR" ]; then
-            echo "✅ macOS build artifacts found at: $MAC_BUILD_DIR"
-            ls -la "$MAC_BUILD_DIR/"
-          else
-            echo "⚠️  macOS build artifacts not found at expected location"
-            echo "Available release directories:"
-            find release/ -maxdepth 2 -type d 2>/dev/null || echo "No release directory found"
-          fi
-
-      - name: Verify macOS artifacts before upload
-        if: steps.build_macos.outcome == 'success'
-        run: |
-          echo "📦 Preparing macOS artifact upload..."
-          
-          echo "Using MAC_BUILD_DIR: ${MAC_BUILD_DIR:-not set}"
-          
-          # Verify the directory exists and has content
-          if [ -z "$MAC_BUILD_DIR" ]; then
-            echo "❌ MAC_BUILD_DIR environment variable not set"
-            echo "Available release directories:"
-            ls -la release/ || echo "No release directory found"
-            exit 1
-          fi
-          
-          if [ ! -d "$MAC_BUILD_DIR" ]; then
-            echo "❌ $MAC_BUILD_DIR directory does not exist"
-            echo "Available release directories:"
-            ls -la release/ || echo "No release directory found"
-            exit 1
-          fi
-          
-          echo "📋 $MAC_BUILD_DIR directory contents:"
-          ls -la "$MAC_BUILD_DIR/"
-          
-          # Check if there are actual files to upload
-          FILE_COUNT=$(find "$MAC_BUILD_DIR" -type f | wc -l)
-          echo "📊 File count in $MAC_BUILD_DIR: $FILE_COUNT"
-          
-          if [ "$FILE_COUNT" -eq 0 ]; then
-            echo "❌ No files found in $MAC_BUILD_DIR directory"
-            exit 1
-          fi
-          
-          echo "✅ Found $FILE_COUNT files to upload"
-          
-          # Show what will be uploaded
-          echo "🔍 Files to be uploaded:"
-          find "$MAC_BUILD_DIR" -type f | head -20
-          
-          echo "🚀 Ready for artifact upload..."
-
       - name: Upload macOS artifacts
-        if: steps.build_macos.outcome == 'success'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mac-unpacked
-          path: ${{ env.MAC_BUILD_DIR }}
+          name: macos-artifacts
+          path: release/
           if-no-files-found: warn
 
   collect-artifacts:
     name: Collect and Upload Artifacts
     runs-on: ubuntu-latest
     needs: [build-windows, build-macos]
+    if: always()
     
     steps:
-      - name: Download Windows artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: win-unpacked
-          path: release/windows/
+          path: artifacts
 
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: mac-unpacked
-          path: release/macos/
-          
-      - name: Check if macOS artifacts were downloaded
+      - name: Organize artifacts
         run: |
-          echo "Checking if macOS artifacts were successfully downloaded..."
-          if [ -d "release/macos" ] && [ -n "$(ls -A release/macos/ 2>/dev/null)" ]; then
-            echo "✅ macOS artifacts found"
-            ls -la release/macos/
+          echo "📦 Organizing downloaded artifacts..."
+          mkdir -p release/windows
+          mkdir -p release/macos
+          
+          # Move Windows artifacts if they exist
+          if [ -d "artifacts/windows-artifacts" ]; then
+            echo "✅ Found Windows artifacts"
+            cp -r artifacts/windows-artifacts/* release/windows/ || true
+            ls -la release/windows/
           else
-            echo "⚠️  macOS artifacts not found (this is okay if macOS build failed)"
+            echo "⚠️  Windows artifacts not found"
           fi
           
-      - name: Upload all artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: pflegedms-installers
-          path: |
-            release/windows/**/*
-            release/macos/**/*
+          # Move macOS artifacts if they exist
+          if [ -d "artifacts/macos-artifacts" ]; then
+            echo "✅ Found macOS artifacts"
+            cp -r artifacts/macos-artifacts/* release/macos/ || true
+            ls -la release/macos/
+          else
+            echo "⚠️  macOS artifacts not found"
+          fi
+          
+          # Move web build for reference
+          if [ -d "artifacts/web-build" ]; then
+            echo "✅ Found web build artifacts"
+            cp -r artifacts/web-build release/web-build || true
+          fi
+          
+          echo "📁 Final release structure:"
+          find release/ -type f | head -30
 
       - name: Create Release Summary
         if: startsWith(github.ref, 'refs/tags/')
@@ -300,34 +171,39 @@ jobs:
           echo "" >> release_summary.md
           echo "## 📦 Available Installers" >> release_summary.md
           echo "" >> release_summary.md
+          
           if [ -d "release/windows" ] && [ -n "$(ls -A release/windows/ 2>/dev/null)" ]; then
             echo "✅ **Windows Build Available**" >> release_summary.md
-            echo "- Built on Windows runner using native tools" >> release_summary.md
-            echo "- Artifacts: Executable and support files" >> release_summary.md
+            echo "- Built on windows-latest runner with native tools" >> release_summary.md
+            echo "- Artifacts: $(find release/windows -type f | wc -l) files" >> release_summary.md
           else
-            echo "❌ **Windows Build Failed**" >> release_summary.md
-            echo "- Windows build did not complete successfully" >> release_summary.md
+            echo "❌ **Windows Build Failed or Not Available**" >> release_summary.md
           fi
+          
           echo "" >> release_summary.md
+          
           if [ -d "release/macos" ] && [ -n "$(ls -A release/macos/ 2>/dev/null)" ]; then
             echo "✅ **macOS Build Available**" >> release_summary.md
-            echo "- Built on macOS runner using native tools" >> release_summary.md
-            echo "- Artifacts: macOS application bundle" >> release_summary.md
+            echo "- Built on macos-latest runner with native tools" >> release_summary.md
+            echo "- Artifacts: $(find release/macos -type f | wc -l) files" >> release_summary.md
           else
-            echo "❌ **macOS Build Failed**" >> release_summary.md
-            echo "- macOS build did not complete successfully" >> release_summary.md
-            echo "- Check the build-macos job logs for details" >> release_summary.md
+            echo "❌ **macOS Build Failed or Not Available**" >> release_summary.md
           fi
+          
           echo "" >> release_summary.md
-          echo "## 📥 Download from GitHub Actions" >> release_summary.md
-          echo "1. Go to Actions tab → Latest run → Artifacts section" >> release_summary.md
-          echo "2. Look for available artifacts (pflegedms-installers)" >> release_summary.md
-          echo "3. Download the appropriate installer for your platform" >> release_summary.md
+          echo "## 📥 Download Instructions" >> release_summary.md
+          echo "" >> release_summary.md
+          echo "### From GitHub Actions:" >> release_summary.md
+          echo "1. Go to Actions → Latest workflow run" >> release_summary.md
+          echo "2. Scroll to Artifacts section" >> release_summary.md
+          echo "3. Download the appropriate artifact:" >> release_summary.md
+          echo "   - **windows-artifacts** - Windows application" >> release_summary.md
+          echo "   - **macos-artifacts** - macOS application" >> release_summary.md
           echo "" >> release_summary.md
           echo "## 🔧 Build Information" >> release_summary.md
           echo "- **Build Date:** $(date)" >> release_summary.md
-          echo "- **Build Platform:** GitHub Actions" >> release_summary.md
-          echo "- **Artifacts:** Cross-platform desktop applications" >> release_summary.md
+          echo "- **Build Platforms:** Cross-platform (Windows, macOS)" >> release_summary.md
+          echo "- **Build System:** GitHub Actions with native platform runners" >> release_summary.md
           
       - name: Upload Release Summary
         if: startsWith(github.ref, 'refs/tags/')
