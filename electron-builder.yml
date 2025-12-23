@@ -12,6 +12,7 @@ win:
   target:
     - target: dir
   icon: assets/icon.png
+  signAndEditExecutable: false
 mac:
   target:
     - target: dir
