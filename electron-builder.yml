@@ -24,7 +24,9 @@ mac:
   category: public.app-category.healthcare-fitness
 linux:
   target:
-    - target: AppImage
-    - target: deb
+    - AppImage
+    - deb
   icon: assets/icon.png
-  category: public.app-category.healthcare-fitness
+  category: Utility
+snap:
+  publish: null
