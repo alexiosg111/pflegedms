@@ -28,5 +28,3 @@ linux:
     - target: deb
   icon: assets/icon.png
   category: public.app-category.healthcare-fitness
-snap:
-  publish: null
