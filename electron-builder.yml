@@ -30,3 +30,8 @@ linux:
   category: Utility
 snap:
   publish: null
+  # Disable snap building by setting an invalid configuration
+  # that will cause Electron Builder to skip the snap build
+  # This is a workaround for the issue where Electron Builder
+  # tries to build snap packages even when not explicitly requested
+  # in CI environments where snapcraft is not available
