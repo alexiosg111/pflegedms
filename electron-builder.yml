@@ -28,5 +28,3 @@ linux:
     - deb
   icon: assets/icon.png
   category: Utility
-snap:
-  publish: null
