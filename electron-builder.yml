@@ -5,6 +5,7 @@ files:
   - electron/**/*
   - build/**/*
   - assets/**/*
+  - "**/*.node"
 directories:
   buildResources: assets
   output: release
@@ -16,15 +17,16 @@ win:
     - target: portable
   icon: assets/icon.png
   signAndEditExecutable: false
-mac:
-  target:
-    - target: dmg
-    - target: zip
-  icon: assets/icon.png
-  category: public.app-category.healthcare-fitness
-linux:
-  target:
-    - target: AppImage
-    - target: deb
-  icon: assets/icon.png
-  category: public.app-category.healthcare-fitness
+  extraFiles:
+    - from: node_modules/electron/dist
+      to: .
+      filter:
+        - "*.dll"
+        - "ffmpeg.dll"
+        - "libEGL.dll"
+        - "libGLESv2.dll"
+        - "d3dcompiler_47.dll"
+        - "vk_swiftshader.dll"
+        - "vulkan-1.dll"
+extraMetadata:
+  main: electron/main.js
