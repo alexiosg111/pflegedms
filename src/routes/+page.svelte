@@ -98,211 +98,83 @@
             tabindex="0"
           >
             <div class="module-icon">{module.icon}</div>
-            <h3 class="module-title">{module.title}</h3>
-            <p class="module-description">{module.description}</p>
-            <div class="module-arrow">→</div>
+            <div class="module-info">
+              <h3>{module.title}</h3>
+              <p>{module.description}</p>
+            </div>
           </div>
         {/each}
       </div>
+
+      <footer class="footer">
+        <p>Version 1.3.0</p>
+      </footer>
     </div>
   {/if}
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-  }
-
-  :global(html) {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-
   main {
     min-height: 100vh;
-    padding: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .module-detail {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-  }
-
-  .dashboard {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .header {
-    text-align: center;
-    margin-bottom: 3rem;
-  }
-
-  .header h1 {
-    font-size: 4rem;
-    font-weight: 800;
-    color: white;
-    margin: 0 0 1rem 0;
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .subtitle {
-    font-size: 1.5rem;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0 0 1rem 0;
-  }
-
-  .platform-badge {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
-  }
-
-  .welcome-section {
-    text-align: center;
-    margin-bottom: 3rem;
-  }
-
-  .welcome-section h2 {
-    font-size: 2.5rem;
-    color: white;
-    margin: 0 0 1rem 0;
-    font-weight: 600;
-  }
-
-  .welcome-section p {
-    font-size: 1.3rem;
-    color: rgba(255, 255, 255, 0.8);
-    margin: 0;
-  }
-
-  .modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-  }
-
-  .module-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
+    min-height: 100vh;
     padding: 2rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .module-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    background: rgba(255, 255, 255, 1);
-  }
-
-  .module-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--module-color), rgba(255, 255, 255, 0.3));
-  }
-
-  .module-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    display: block;
-  }
-
-  .module-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin: 0 0 0.5rem 0;
-  }
-
-  .module-description {
-    color: #6b7280;
-    font-size: 1rem;
-    line-height: 1.6;
-    margin: 0 0 1.5rem 0;
-  }
-
-  .module-arrow {
-    position: absolute;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    font-size: 1.5rem;
-    color: var(--module-color);
-    font-weight: bold;
-    transition: transform 0.3s ease;
-  }
-
-  .module-card:hover .module-arrow {
-    transform: translateX(5px);
-  }
-
-  /* Module Detail View */
-  .module-detail {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
   }
 
   .back-button {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    padding: 0.8rem 1.5rem;
+    background: white;
+    color: #667eea;
     border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 50px;
-    font-size: 1rem;
+    border-radius: 10px;
+    font-weight: bold;
     cursor: pointer;
-    margin-bottom: 2rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
   }
 
   .back-button:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateX(-5px);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
   }
 
   .module-content {
-    background: rgba(255, 255, 255, 0.95);
+    background: white;
     border-radius: 20px;
     padding: 3rem;
-    backdrop-filter: blur(10px);
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   }
 
   .module-content h1 {
+    color: #667eea;
     font-size: 2.5rem;
-    color: #1f2937;
     margin: 0 0 1rem 0;
   }
 
-  .module-content .module-description {
+  .module-description {
+    color: #666;
     font-size: 1.2rem;
-    color: #6b7280;
-    margin-bottom: 3rem;
+    margin: 0 0 2rem 0;
   }
 
   .module-placeholder {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: #f8fafc;
+    padding: 3rem;
+    background: #f8f9fa;
     border-radius: 15px;
-    border: 2px dashed #d1d5db;
+    margin: 2rem 0;
   }
 
   .placeholder-icon {
@@ -311,45 +183,122 @@
   }
 
   .module-placeholder h3 {
-    font-size: 1.5rem;
-    color: #374151;
-    margin: 0 0 1rem 0;
+    color: #667eea;
+    margin: 0 0 0.5rem 0;
   }
 
   .module-placeholder p {
-    color: #6b7280;
-    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
   }
 
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    main {
-      padding: 1rem;
-    }
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 2rem;
+  }
 
-    .header h1 {
-      font-size: 3rem;
-    }
+  .header {
+    text-align: center;
+    color: white;
+    margin-bottom: 3rem;
+  }
 
-    .welcome-section h2 {
-      font-size: 2rem;
-    }
+  .header h1 {
+    font-size: 3.5rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  }
 
-    .modules-grid {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
+  .subtitle {
+    font-size: 1.5rem;
+    margin: 0;
+    opacity: 0.9;
+  }
 
-    .module-card {
-      padding: 1.5rem;
-    }
+  .platform-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
 
-    .module-content {
-      padding: 2rem;
-    }
+  .welcome-section {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem 3rem;
+    margin-bottom: 3rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
 
-    .module-content h1 {
-      font-size: 2rem;
-    }
+  .welcome-section h2 {
+    color: #667eea;
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+  }
+
+  .welcome-section p {
+    color: #666;
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  .module-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .module-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .module-card:focus {
+    outline: 2px solid var(--module-color);
+    outline-offset: 2px;
+  }
+
+  .module-icon {
+    font-size: 3rem;
+    flex-shrink: 0;
+  }
+
+  .module-info h3 {
+    color: var(--module-color);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+  }
+
+  .module-info p {
+    color: #666;
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .footer {
+    margin-top: 4rem;
+    color: white;
+    opacity: 0.8;
   }
 </style>
