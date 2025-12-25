@@ -1,13 +1,23 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
+  import type { Document, DocumentTemplate, Patient, Appointment, Staff, DocumentCategory, DocumentStatus } from '$lib/types';
+  import { DOCUMENT_CATEGORIES } from '$lib/types';
+  import { StorageService } from '$lib/storageService';
+  import { searchDocuments, changeDocumentStatus, addApprovalRecord, restoreVersion, addAuditLog, classifyDocument, extractMetadata } from '$lib/documentService';
+  import DocumentForm from '$lib/components/DocumentForm.svelte';
+  import DocumentDetail from '$lib/components/DocumentDetail.svelte';
+  import DocumentSearch from '$lib/components/DocumentSearch.svelte';
 
   let platform = 'web';
-  let currentModule = null;
+  let currentModule: string | null = null;
+  let currentView: 'list' | 'detail' | 'form' = 'list';
+  let selectedDocument: Document | null = null;
 
   onMount(() => {
     if (typeof window !== 'undefined' && window.electron) {
       platform = window.electron.platform;
     }
+    StorageService.init();
     loadFromStorage();
   });
 
@@ -42,74 +52,101 @@
     }
   ];
 
-  let patients = [];
-  let appointments = [];
-  let documents = [];
-  let staff = [];
+  let patients: Patient[] = [];
+  let appointments: Appointment[] = [];
+  let documents: Document[] = [];
+  let staff: Staff[] = [];
+  let templates: DocumentTemplate[] = [];
 
-  let editingPatient = null;
-  let editingAppointment = null;
-  let editingDocument = null;
-  let editingStaff = null;
+  let editingPatient: Patient | null = null;
+  let editingAppointment: Appointment | null = null;
+  let editingDocument: Document | null = null;
+  let editingStaff: Staff | null = null;
   let showAddModal = false;
 
   let searchQuery = '';
+  let docSearchQuery = '';
+  let docSelectedCategory: DocumentCategory | '' = '';
+  let docSelectedStatus: DocumentStatus | '' = '';
+  let docSelectedTags: string[] = [];
 
   function loadFromStorage() {
-    try {
-      const storedPatients = localStorage.getItem('pflegedms_patients');
-      const storedAppointments = localStorage.getItem('pflegedms_appointments');
-      const storedDocuments = localStorage.getItem('pflegedms_documents');
-      const storedStaff = localStorage.getItem('pflegedms_staff');
-
-      if (storedPatients) patients = JSON.parse(storedPatients);
-      if (storedAppointments) appointments = JSON.parse(storedAppointments);
-      if (storedDocuments) documents = JSON.parse(storedDocuments);
-      if (storedStaff) staff = JSON.parse(storedStaff);
-    } catch (e) {
-      console.error('Error loading from storage:', e);
-    }
+    patients = StorageService.getPatients();
+    appointments = StorageService.getAppointments();
+    documents = StorageService.getDocuments();
+    staff = StorageService.getStaff();
+    templates = StorageService.getTemplates();
   }
 
-  function saveToStorage() {
-    localStorage.setItem('pflegedms_patients', JSON.stringify(patients));
-    localStorage.setItem('pflegedms_appointments', JSON.stringify(appointments));
-    localStorage.setItem('pflegedms_documents', JSON.stringify(documents));
-    localStorage.setItem('pflegedms_staff', JSON.stringify(staff));
+  function savePatients() {
+    StorageService.savePatients(patients);
   }
 
-  function openModule(moduleId) {
+  function saveAppointments() {
+    StorageService.saveAppointments(appointments);
+  }
+
+  function saveDocuments() {
+    StorageService.saveDocuments(documents);
+  }
+
+  function saveStaff() {
+    StorageService.saveStaff(staff);
+  }
+
+  function openModule(moduleId: string) {
     currentModule = moduleId;
+    currentView = 'list';
   }
 
   function goBack() {
-    currentModule = null;
+    if (currentView === 'detail' || currentView === 'form') {
+      currentView = 'list';
+      selectedDocument = null;
+      editingDocument = null;
+    } else {
+      currentModule = null;
+    }
   }
 
-  function openAddModal(type) {
+  function openAddModal(type: string) {
     if (type === 'patient') {
       editingPatient = { id: '', name: '', birthDate: '', address: '', phone: '', insurance: '', diagnosis: '', notes: '' };
     } else if (type === 'appointment') {
       editingAppointment = { id: '', title: '', date: '', time: '', patientId: '', staffId: '', notes: '' };
     } else if (type === 'document') {
-      editingDocument = { id: '', title: '', date: '', patientId: '', type: '', notes: '' };
+      editingDocument = null;
+      currentView = 'form';
+      return;
     } else if (type === 'staff') {
       editingStaff = { id: '', name: '', position: '', phone: '', email: '', qualifications: '', notes: '' };
     }
     showAddModal = true;
   }
 
-  function openEditModal(type, item) {
+  function openEditModal(type: string, item: any) {
     if (type === 'patient') {
       editingPatient = { ...item };
     } else if (type === 'appointment') {
       editingAppointment = { ...item };
     } else if (type === 'document') {
-      editingDocument = { ...item };
+      editingDocument = item;
+      currentView = 'form';
+      return;
     } else if (type === 'staff') {
       editingStaff = { ...item };
     }
     showAddModal = true;
+  }
+
+  function viewDocument(doc: Document) {
+    selectedDocument = addAuditLog(doc, 'view', 'Dokument angezeigt');
+    const index = documents.findIndex(d => d.id === doc.id);
+    if (index !== -1) {
+      documents[index] = selectedDocument;
+      saveDocuments();
+    }
+    currentView = 'detail';
   }
 
   function closeModal() {
@@ -121,78 +158,162 @@
   }
 
   function savePatient() {
+    if (!editingPatient) return;
+    
     if (editingPatient.id) {
-      const index = patients.findIndex(p => p.id === editingPatient.id);
+      const index = patients.findIndex(p => p.id === editingPatient!.id);
       if (index !== -1) patients[index] = editingPatient;
     } else {
       editingPatient.id = Date.now().toString();
-      patients.push(editingPatient);
+      patients = [...patients, editingPatient];
     }
-    saveToStorage();
+    savePatients();
     closeModal();
   }
 
   function saveAppointment() {
+    if (!editingAppointment) return;
+    
     if (editingAppointment.id) {
-      const index = appointments.findIndex(a => a.id === editingAppointment.id);
+      const index = appointments.findIndex(a => a.id === editingAppointment!.id);
       if (index !== -1) appointments[index] = editingAppointment;
     } else {
       editingAppointment.id = Date.now().toString();
-      appointments.push(editingAppointment);
+      appointments = [...appointments, editingAppointment];
     }
-    saveToStorage();
+    saveAppointments();
     closeModal();
   }
 
-  function saveDocument() {
-    if (editingDocument.id) {
-      const index = documents.findIndex(d => d.id === editingDocument.id);
-      if (index !== -1) documents[index] = editingDocument;
+  function handleDocumentSave(event: CustomEvent<Document>) {
+    const doc = event.detail;
+    
+    if (doc.id && documents.find(d => d.id === doc.id)) {
+      const index = documents.findIndex(d => d.id === doc.id);
+      if (index !== -1) {
+        documents[index] = doc;
+      }
     } else {
-      editingDocument.id = Date.now().toString();
-      documents.push(editingDocument);
+      documents = [...documents, doc];
     }
-    saveToStorage();
-    closeModal();
+    
+    saveDocuments();
+    currentView = 'list';
+    editingDocument = null;
   }
 
-  function saveStaff() {
+  function handleDocumentCancel() {
+    currentView = 'list';
+    editingDocument = null;
+  }
+
+  function handleDocumentEdit(event: CustomEvent<Document>) {
+    editingDocument = event.detail;
+    currentView = 'form';
+  }
+
+  function handleDocumentDelete(event: CustomEvent<string>) {
+    const docId = event.detail;
+    const doc = documents.find(d => d.id === docId);
+    
+    if (doc && confirm('Möchten Sie dieses Dokument wirklich löschen?')) {
+      const updated = changeDocumentStatus(doc, 'deleted', 'Benutzer hat Dokument gelöscht');
+      const index = documents.findIndex(d => d.id === docId);
+      if (index !== -1) {
+        documents[index] = updated;
+        saveDocuments();
+      }
+      currentView = 'list';
+    }
+  }
+
+  function handleRestoreVersion(event: CustomEvent<{ documentId: string; versionNumber: number }>) {
+    const { documentId, versionNumber } = event.detail;
+    const doc = documents.find(d => d.id === documentId);
+    
+    if (doc) {
+      try {
+        const restored = restoreVersion(doc, versionNumber);
+        const index = documents.findIndex(d => d.id === documentId);
+        if (index !== -1) {
+          documents[index] = restored;
+          selectedDocument = restored;
+          saveDocuments();
+        }
+      } catch (error) {
+        alert('Fehler beim Wiederherstellen der Version: ' + (error as Error).message);
+      }
+    }
+  }
+
+  function handleApprove(event: CustomEvent<string>) {
+    const docId = event.detail;
+    const doc = documents.find(d => d.id === docId);
+    
+    const comment = prompt('Freigabe-Kommentar (optional):');
+    if (comment === null) return;
+    
+    if (doc) {
+      const approved = addApprovalRecord(doc, 'system', 'approved', comment || undefined);
+      const index = documents.findIndex(d => d.id === docId);
+      if (index !== -1) {
+        documents[index] = approved;
+        selectedDocument = approved;
+        saveDocuments();
+      }
+    }
+  }
+
+  function handleReject(event: CustomEvent<string>) {
+    const docId = event.detail;
+    const doc = documents.find(d => d.id === docId);
+    
+    const comment = prompt('Ablehnungsgrund (optional):');
+    if (comment === null) return;
+    
+    if (doc) {
+      const rejected = addApprovalRecord(doc, 'system', 'rejected', comment || undefined);
+      const index = documents.findIndex(d => d.id === docId);
+      if (index !== -1) {
+        documents[index] = rejected;
+        selectedDocument = rejected;
+        saveDocuments();
+      }
+    }
+  }
+
+  function saveStaffMember() {
+    if (!editingStaff) return;
+    
     if (editingStaff.id) {
-      const index = staff.findIndex(s => s.id === editingStaff.id);
+      const index = staff.findIndex(s => s.id === editingStaff!.id);
       if (index !== -1) staff[index] = editingStaff;
     } else {
       editingStaff.id = Date.now().toString();
-      staff.push(editingStaff);
+      staff = [...staff, editingStaff];
     }
-    saveToStorage();
+    saveStaff();
     closeModal();
   }
 
-  function deletePatient(id) {
+  function deletePatient(id: string) {
     if (confirm('Möchten Sie diesen Patienten wirklich löschen?')) {
       patients = patients.filter(p => p.id !== id);
-      saveToStorage();
+      savePatients();
     }
   }
 
-  function deleteAppointment(id) {
+  function deleteAppointment(id: string) {
     if (confirm('Möchten Sie diesen Termin wirklich löschen?')) {
       appointments = appointments.filter(a => a.id !== id);
-      saveToStorage();
+      saveAppointments();
     }
   }
 
-  function deleteDocument(id) {
-    if (confirm('Möchten Sie dieses Dokument wirklich löschen?')) {
-      documents = documents.filter(d => d.id !== id);
-      saveToStorage();
-    }
-  }
-
-  function deleteStaff(id) {
+  function deleteStaffMember(id: string) {
     if (confirm('Möchten Sie diesen Mitarbeiter wirklich löschen?')) {
       staff = staff.filter(s => s.id !== id);
-      saveToStorage();
+      saveStaff();
     }
   }
 
@@ -205,19 +326,37 @@
     a.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  $: filteredDocuments = documents.filter(d =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  $: filteredDocuments = searchDocuments(documents, docSearchQuery, {
+    category: docSelectedCategory || undefined,
+    status: docSelectedStatus || undefined,
+    tags: docSelectedTags.length > 0 ? docSelectedTags : undefined
+  }).filter(d => d.status !== 'deleted');
 
   $: filteredStaff = staff.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.position?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  function formatDate(dateStr) {
+  $: allTags = Array.from(new Set(documents.flatMap(d => d.tags)));
+
+  function formatDate(dateStr: string): string {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
     return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  function getCategoryLabel(category: DocumentCategory): string {
+    return DOCUMENT_CATEGORIES.find(c => c.value === category)?.label || category;
+  }
+
+  function getStatusBadge(status: DocumentStatus): string {
+    switch (status) {
+      case 'draft': return '📝';
+      case 'active': return '✅';
+      case 'archived': return '📦';
+      case 'deleted': return '🗑️';
+      default: return '📄';
+    }
   }
 </script>
 
@@ -225,91 +364,148 @@
   {#if currentModule}
     <div class="module-detail">
       <button class="back-button" on:click={goBack}>
-        ← Zurück zum Dashboard
+        ← {currentView === 'list' ? 'Zurück zum Dashboard' : 'Zurück zur Liste'}
       </button>
 
       <div class="module-container">
-        <header class="module-header">
-          <h1>
-            <span class="module-icon">{modules.find(m => m.id === currentModule)?.icon}</span>
-            {modules.find(m => m.id === currentModule)?.title}
-          </h1>
-          <button class="add-button" on:click={() => openAddModal(currentModule.slice(0, -1))}>
-            + Hinzufügen
-          </button>
-        </header>
+        {#if currentView === 'list'}
+          <header class="module-header">
+            <h1>
+              <span class="module-icon">{modules.find(m => m.id === currentModule)?.icon}</span>
+              {modules.find(m => m.id === currentModule)?.title}
+            </h1>
+            <button class="add-button" on:click={() => currentModule && openAddModal(currentModule.slice(0, -1))}>
+              + Hinzufügen
+            </button>
+          </header>
 
-        <div class="search-bar">
-          <input type="text" placeholder="🔍 Suchen..." bind:value={searchQuery} />
-        </div>
-
-        <div class="content-list">
-          {#if currentModule === 'patients'}
-            {#each filteredPatients as patient}
-              <div class="list-item">
-                <div class="item-main">
-                  <h3>{patient.name}</h3>
-                  <p class="item-detail">{formatDate(patient.birthDate)} | {patient.insurance}</p>
-                </div>
-                <div class="item-actions">
-                  <button class="edit-btn" on:click={() => openEditModal('patient', patient)}>✏️</button>
-                  <button class="delete-btn" on:click={() => deletePatient(patient.id)}>🗑️</button>
-                </div>
-              </div>
-            {/each}
-            {#if filteredPatients.length === 0}
-              <p class="empty-state">Keine Patienten gefunden</p>
-            {/if}
-          {:else if currentModule === 'schedule'}
-            {#each filteredAppointments as appointment}
-              <div class="list-item">
-                <div class="item-main">
-                  <h3>{appointment.title}</h3>
-                  <p class="item-detail">{formatDate(appointment.date)} um {appointment.time}</p>
-                </div>
-                <div class="item-actions">
-                  <button class="edit-btn" on:click={() => openEditModal('appointment', appointment)}>✏️</button>
-                  <button class="delete-btn" on:click={() => deleteAppointment(appointment.id)}>🗑️</button>
-                </div>
-              </div>
-            {/each}
-            {#if filteredAppointments.length === 0}
-              <p class="empty-state">Keine Termine gefunden</p>
-            {/if}
-          {:else if currentModule === 'documentation'}
-            {#each filteredDocuments as document}
-              <div class="list-item">
-                <div class="item-main">
-                  <h3>{document.title}</h3>
-                  <p class="item-detail">{formatDate(document.date)} | {document.type}</p>
-                </div>
-                <div class="item-actions">
-                  <button class="edit-btn" on:click={() => openEditModal('document', document)}>✏️</button>
-                  <button class="delete-btn" on:click={() => deleteDocument(document.id)}>🗑️</button>
-                </div>
-              </div>
-            {/each}
-            {#if filteredDocuments.length === 0}
-              <p class="empty-state">Keine Dokumente gefunden</p>
-            {/if}
-          {:else if currentModule === 'staff'}
-            {#each filteredStaff as staffMember}
-              <div class="list-item">
-                <div class="item-main">
-                  <h3>{staffMember.name}</h3>
-                  <p class="item-detail">{staffMember.position} | {staffMember.phone}</p>
-                </div>
-                <div class="item-actions">
-                  <button class="edit-btn" on:click={() => openEditModal('staff', staffMember)}>✏️</button>
-                  <button class="delete-btn" on:click={() => deleteStaff(staffMember.id)}>🗑️</button>
-                </div>
-              </div>
-            {/each}
-            {#if filteredStaff.length === 0}
-              <p class="empty-state">Keine Mitarbeiter gefunden</p>
-            {/if}
+          {#if currentModule === 'documentation'}
+            <DocumentSearch
+              bind:searchQuery={docSearchQuery}
+              bind:selectedCategory={docSelectedCategory}
+              bind:selectedStatus={docSelectedStatus}
+              bind:selectedTags={docSelectedTags}
+              availableTags={allTags}
+              on:search={() => {}}
+            />
+          {:else}
+            <div class="search-bar">
+              <input type="text" placeholder="🔍 Suchen..." bind:value={searchQuery} />
+            </div>
           {/if}
-        </div>
+
+          <div class="content-list">
+            {#if currentModule === 'patients'}
+              {#each filteredPatients as patient}
+                <div class="list-item">
+                  <div class="item-main">
+                    <h3>{patient.name}</h3>
+                    <p class="item-detail">{formatDate(patient.birthDate)} | {patient.insurance}</p>
+                  </div>
+                  <div class="item-actions">
+                    <button class="edit-btn" on:click={() => openEditModal('patient', patient)}>✏️</button>
+                    <button class="delete-btn" on:click={() => deletePatient(patient.id)}>🗑️</button>
+                  </div>
+                </div>
+              {/each}
+              {#if filteredPatients.length === 0}
+                <p class="empty-state">Keine Patienten gefunden</p>
+              {/if}
+            {:else if currentModule === 'schedule'}
+              {#each filteredAppointments as appointment}
+                <div class="list-item">
+                  <div class="item-main">
+                    <h3>{appointment.title}</h3>
+                    <p class="item-detail">{formatDate(appointment.date)} um {appointment.time}</p>
+                  </div>
+                  <div class="item-actions">
+                    <button class="edit-btn" on:click={() => openEditModal('appointment', appointment)}>✏️</button>
+                    <button class="delete-btn" on:click={() => deleteAppointment(appointment.id)}>🗑️</button>
+                  </div>
+                </div>
+              {/each}
+              {#if filteredAppointments.length === 0}
+                <p class="empty-state">Keine Termine gefunden</p>
+              {/if}
+            {:else if currentModule === 'documentation'}
+              {#each filteredDocuments as document}
+                <div class="list-item document-item" on:click={() => viewDocument(document)} role="button" tabindex="0">
+                  <div class="item-main">
+                    <div class="doc-header">
+                      <h3>
+                        {getStatusBadge(document.status)} {document.title}
+                        <span class="version-badge">v{document.version}</span>
+                      </h3>
+                      {#if document.approvalStatus === 'approved'}
+                        <span class="approval-badge">✓ Freigegeben</span>
+                      {:else if document.approvalStatus === 'pending'}
+                        <span class="approval-badge pending">⏳ Ausstehend</span>
+                      {/if}
+                    </div>
+                    <p class="item-detail">
+                      {getCategoryLabel(document.category)} | {formatDate(document.createdAt)}
+                      {#if document.patientId}
+                        | {patients.find(p => p.id === document.patientId)?.name || 'Unbekannt'}
+                      {/if}
+                    </p>
+                    {#if document.tags.length > 0}
+                      <div class="doc-tags">
+                        {#each document.tags.slice(0, 3) as tag}
+                          <span class="tag-mini">{tag}</span>
+                        {/each}
+                        {#if document.tags.length > 3}
+                          <span class="tag-mini">+{document.tags.length - 3}</span>
+                        {/if}
+                      </div>
+                    {/if}
+                  </div>
+                  <div class="item-actions">
+                    <button class="view-btn" on:click|stopPropagation={() => viewDocument(document)}>👁️</button>
+                    <button class="edit-btn" on:click|stopPropagation={() => openEditModal('document', document)}>✏️</button>
+                  </div>
+                </div>
+              {/each}
+              {#if filteredDocuments.length === 0}
+                <p class="empty-state">Keine Dokumente gefunden</p>
+              {/if}
+            {:else if currentModule === 'staff'}
+              {#each filteredStaff as staffMember}
+                <div class="list-item">
+                  <div class="item-main">
+                    <h3>{staffMember.name}</h3>
+                    <p class="item-detail">{staffMember.position} | {staffMember.phone}</p>
+                  </div>
+                  <div class="item-actions">
+                    <button class="edit-btn" on:click={() => openEditModal('staff', staffMember)}>✏️</button>
+                    <button class="delete-btn" on:click={() => deleteStaffMember(staffMember.id)}>🗑️</button>
+                  </div>
+                </div>
+              {/each}
+              {#if filteredStaff.length === 0}
+                <p class="empty-state">Keine Mitarbeiter gefunden</p>
+              {/if}
+            {/if}
+          </div>
+        {:else if currentView === 'form'}
+          <DocumentForm
+            document={editingDocument}
+            {patients}
+            {templates}
+            on:save={handleDocumentSave}
+            on:cancel={handleDocumentCancel}
+          />
+        {:else if currentView === 'detail' && selectedDocument}
+          <DocumentDetail
+            document={selectedDocument}
+            {patients}
+            {staff}
+            on:edit={handleDocumentEdit}
+            on:delete={handleDocumentDelete}
+            on:restoreVersion={handleRestoreVersion}
+            on:approve={handleApprove}
+            on:reject={handleReject}
+          />
+        {/if}
       </div>
     </div>
 
@@ -317,9 +513,9 @@
       <div class="modal-overlay" on:click={closeModal}>
         <div class="modal-content" on:click|stopPropagation>
           <button class="close-modal" on:click={closeModal}>×</button>
-          <h2>{editingPatient?.id ? 'Patient bearbeiten' : 'Neuer Patient'}</h2>
 
           {#if editingPatient}
+            <h2>{editingPatient?.id ? 'Patient bearbeiten' : 'Neuer Patient'}</h2>
             <form on:submit|preventDefault={savePatient}>
               <label>
                 Name
@@ -390,45 +586,9 @@
               </label>
               <button type="submit" class="submit-button">Speichern</button>
             </form>
-          {:else if editingDocument}
-            <h2>{editingDocument?.id ? 'Dokument bearbeiten' : 'Neues Dokument'}</h2>
-            <form on:submit|preventDefault={saveDocument}>
-              <label>
-                Titel
-                <input type="text" bind:value={editingDocument.title} required />
-              </label>
-              <label>
-                Datum
-                <input type="date" bind:value={editingDocument.date} required />
-              </label>
-              <label>
-                Typ
-                <select bind:value={editingDocument.type}>
-                  <option value="">-- Typ auswählen --</option>
-                  <option value="Bericht">Bericht</option>
-                  <option value="Arztbrief">Arztbrief</option>
-                  <option value="Verordnung">Verordnung</option>
-                  <option value="Pflegeplan">Pflegeplan</option>
-                </select>
-              </label>
-              <label>
-                Patient
-                <select bind:value={editingDocument.patientId}>
-                  <option value="">-- Patient auswählen --</option>
-                  {#each patients as patient}
-                    <option value={patient.id}>{patient.name}</option>
-                  {/each}
-                </select>
-              </label>
-              <label>
-                Notizen
-                <textarea bind:value={editingDocument.notes}></textarea>
-              </label>
-              <button type="submit" class="submit-button">Speichern</button>
-            </form>
           {:else if editingStaff}
             <h2>{editingStaff?.id ? 'Mitarbeiter bearbeiten' : 'Neuer Mitarbeiter'}</h2>
-            <form on:submit|preventDefault={saveStaff}>
+            <form on:submit|preventDefault={saveStaffMember}>
               <label>
                 Name
                 <input type="text" bind:value={editingStaff.name} required />
@@ -472,6 +632,24 @@
       <div class="welcome-section">
         <h2>Willkommen zu PflegeDMS</h2>
         <p>Ihr umfassendes Management-System für Pflegedienste</p>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value">{patients.length}</div>
+            <div class="stat-label">Patienten</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{documents.filter(d => d.status !== 'deleted').length}</div>
+            <div class="stat-label">Dokumente</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{appointments.length}</div>
+            <div class="stat-label">Termine</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">{staff.length}</div>
+            <div class="stat-label">Mitarbeiter</div>
+          </div>
+        </div>
       </div>
 
       <div class="modules-grid">
@@ -494,170 +672,356 @@
       </div>
 
       <footer class="footer">
-        <p>Version 1.4.0</p>
+        <p>Version 1.4.0 • Erweiterte Dokumentenverwaltung</p>
       </footer>
     </div>
   {/if}
 </main>
 
 <style>
-  main {
-    min-height: 100vh;
+  * {
+    box-sizing: border-box;
+  }
+
+  :global(body) {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+
+  main {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .dashboard {
+    text-align: center;
+  }
+
+  .header {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+    position: relative;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 3rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    margin: 10px 0 0 0;
+    color: #666;
+    font-size: 1.2rem;
+  }
+
+  .platform-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+  }
+
+  .welcome-section {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+  }
+
+  .welcome-section h2 {
+    margin-top: 0;
+    color: #333;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .stat-card {
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    color: white;
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .module-card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 5px solid var(--module-color);
+  }
+
+  .module-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .module-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+  }
+
+  .module-info h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.4rem;
+  }
+
+  .module-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
+  }
+
+  .footer {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    color: #666;
+  }
+
+  .footer p {
+    margin: 0;
   }
 
   .module-detail {
-    display: flex;
-    flex-direction: column;
-    padding: 2rem;
-    padding-top: 6rem;
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    min-height: 80vh;
   }
 
   .back-button {
-    position: absolute;
-    top: 2rem;
-    left: 2rem;
-    padding: 0.8rem 1.5rem;
-    background: white;
-    color: #667eea;
+    padding: 10px 20px;
+    background: #6b7280;
+    color: white;
     border: none;
-    border-radius: 10px;
-    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+    font-size: 16px;
+    margin-bottom: 20px;
+    transition: background 0.2s;
   }
 
   .back-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    background: #4b5563;
   }
 
   .module-container {
-    background: white;
-    border-radius: 20px;
-    padding: 2rem;
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   }
 
   .module-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
   }
 
   .module-header h1 {
+    margin: 0;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    color: #667eea;
-    margin: 0;
-    font-size: 2rem;
-  }
-
-  .module-icon {
-    font-size: 2.5rem;
+    gap: 15px;
+    color: #1f2937;
   }
 
   .add-button {
-    padding: 0.8rem 1.5rem;
-    background: #667eea;
+    padding: 12px 24px;
+    background: #10b981;
     color: white;
     border: none;
-    border-radius: 10px;
-    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.2s;
   }
 
   .add-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    background: #059669;
+  }
+
+  .search-bar {
+    margin-bottom: 20px;
   }
 
   .search-bar input {
     width: 100%;
-    padding: 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 1rem;
-    margin-bottom: 2rem;
-    box-sizing: border-box;
+    padding: 12px 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
   }
 
   .search-bar input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #3b82f6;
   }
 
   .content-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 12px;
   }
 
   .list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
-    background: #f8f9fa;
-    border-radius: 10px;
-    transition: transform 0.2s, box-shadow 0.2s;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+    transition: background 0.2s;
   }
 
   .list-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #f3f4f6;
+  }
+
+  .document-item {
+    cursor: pointer;
+  }
+
+  .item-main {
+    flex: 1;
   }
 
   .item-main h3 {
-    margin: 0 0 0.5rem 0;
-    color: #333;
-    font-size: 1.2rem;
+    margin: 0 0 8px 0;
+    color: #1f2937;
+    font-size: 1.1rem;
+  }
+
+  .doc-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .version-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    background: #e5e7eb;
+    color: #6b7280;
+    border-radius: 12px;
+    font-weight: normal;
+  }
+
+  .approval-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .approval-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
   }
 
   .item-detail {
     margin: 0;
-    color: #666;
-    font-size: 0.95rem;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+
+  .doc-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .tag-mini {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 10px;
   }
 
   .item-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
   }
 
-  .edit-btn, .delete-btn {
-    padding: 0.5rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: transform 0.2s;
-  }
-
-  .edit-btn:hover, .delete-btn:hover {
-    transform: scale(1.1);
-  }
-
-  .edit-btn {
-    background: #4CAF50;
-    color: white;
-  }
-
+  .view-btn,
+  .edit-btn,
   .delete-btn {
-    background: #f44336;
-    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    background: #e5e7eb;
+    transition: background 0.2s;
+  }
+
+  .view-btn:hover {
+    background: #3b82f6;
+  }
+
+  .edit-btn:hover {
+    background: #fbbf24;
+  }
+
+  .delete-btn:hover {
+    background: #ef4444;
   }
 
   .empty-state {
     text-align: center;
-    padding: 3rem;
-    color: #999;
+    padding: 40px;
+    color: #9ca3af;
     font-size: 1.1rem;
   }
 
@@ -669,15 +1033,15 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     z-index: 1000;
   }
 
   .modal-content {
     background: white;
-    border-radius: 20px;
-    padding: 2rem;
+    padding: 30px;
+    border-radius: 16px;
     max-width: 600px;
     width: 90%;
     max-height: 90vh;
@@ -687,179 +1051,64 @@
 
   .close-modal {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 15px;
+    right: 15px;
     background: none;
     border: none;
-    font-size: 2rem;
+    font-size: 30px;
     cursor: pointer;
-    color: #666;
+    color: #6b7280;
+    line-height: 1;
+  }
+
+  .close-modal:hover {
+    color: #1f2937;
   }
 
   .modal-content h2 {
-    color: #667eea;
-    margin: 0 0 1.5rem 0;
-    padding-right: 2rem;
+    margin-top: 0;
+    color: #1f2937;
   }
 
-  .modal-content form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  form label {
+    display: block;
+    margin-bottom: 16px;
+    font-weight: 500;
+    color: #374151;
   }
 
-  .modal-content label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .modal-content label input,
-  .modal-content label select,
-  .modal-content label textarea {
-    padding: 0.8rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1rem;
+  form input,
+  form select,
+  form textarea {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
     font-family: inherit;
   }
 
-  .modal-content label input:focus,
-  .modal-content label select:focus,
-  .modal-content label textarea:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-
-  .modal-content label textarea {
-    min-height: 100px;
+  form textarea {
     resize: vertical;
+    min-height: 80px;
   }
 
   .submit-button {
-    padding: 1rem 2rem;
-    background: #667eea;
+    width: 100%;
+    padding: 12px;
+    background: #10b981;
     color: white;
     border: none;
-    border-radius: 10px;
-    font-weight: bold;
-    font-size: 1.1rem;
+    border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 10px;
   }
 
   .submit-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-  }
-
-  .dashboard {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 3rem 2rem;
-  }
-
-  .header {
-    text-align: center;
-    color: white;
-    margin-bottom: 3rem;
-  }
-
-  .header h1 {
-    font-size: 3.5rem;
-    margin: 0 0 0.5rem 0;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .subtitle {
-    font-size: 1.5rem;
-    margin: 0;
-    opacity: 0.9;
-  }
-
-  .platform-badge {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-  }
-
-  .welcome-section {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem 3rem;
-    margin-bottom: 3rem;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .welcome-section h2 {
-    color: #667eea;
-    margin: 0 0 0.5rem 0;
-    font-size: 2rem;
-  }
-
-  .welcome-section p {
-    color: #666;
-    margin: 0;
-    font-size: 1.2rem;
-  }
-
-  .modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    width: 100%;
-    max-width: 1200px;
-  }
-
-  .module-card {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .module-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-  }
-
-  .module-card:focus {
-    outline: 2px solid var(--module-color);
-    outline-offset: 2px;
-  }
-
-  .module-icon {
-    font-size: 3rem;
-    flex-shrink: 0;
-  }
-
-  .module-info h3 {
-    color: var(--module-color);
-    margin: 0 0 0.5rem 0;
-    font-size: 1.3rem;
-  }
-
-  .module-info p {
-    color: #666;
-    margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-
-  .footer {
-    margin-top: 4rem;
-    color: white;
-    opacity: 0.8;
+    background: #059669;
   }
 </style>
