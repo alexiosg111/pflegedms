@@ -672,7 +672,10 @@
       </div>
 
       <footer class="footer">
-        <p>Version 1.4.0 • Erweiterte Dokumentenverwaltung</p>
+        <p>Version 1.5.0 • Professional Document Management</p>
+        <div class="footer-links">
+          <span>🚀 Powered by PflegeDMS</span>
+        </div>
       </footer>
     </div>
   {/if}
@@ -688,7 +691,40 @@
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
     min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
   }
 
   main {
@@ -699,24 +735,30 @@
 
   .dashboard {
     text-align: center;
+    animation: fadeIn 0.6s ease-out;
   }
 
   .header {
     background: white;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px;
+    padding: 50px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    margin-bottom: 40px;
     position: relative;
+    animation: fadeIn 0.8s ease-out;
+    background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
   }
 
   .header h1 {
     margin: 0;
-    font-size: 3rem;
+    font-size: 3.5rem;
+    font-weight: 800;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    letter-spacing: -1px;
+    animation: slideIn 0.8s ease-out;
   }
 
   .subtitle {
@@ -739,15 +781,24 @@
 
   .welcome-section {
     background: white;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    margin-bottom: 40px;
+    animation: fadeIn 1s ease-out 0.2s both;
+    background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
   }
 
   .welcome-section h2 {
     margin-top: 0;
-    color: #333;
+    color: #1f2937;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+  
+  .welcome-section p {
+    color: #6b7280;
+    font-size: 1.1rem;
   }
 
   .stats-grid {
@@ -758,21 +809,49 @@
   }
 
   .stat-card {
-    padding: 20px;
+    padding: 24px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
+    border-radius: 16px;
     color: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  .stat-card:hover::before {
+    opacity: 1;
   }
 
   .stat-value {
-    font-size: 2.5rem;
-    font-weight: bold;
+    font-size: 3rem;
+    font-weight: 900;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   }
 
   .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    margin-top: 4px;
+    font-size: 1rem;
+    opacity: 0.95;
+    margin-top: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
   }
 
   .modules-grid {
@@ -784,46 +863,89 @@
 
   .module-card {
     background: white;
-    padding: 30px;
-    border-radius: 16px;
+    padding: 35px;
+    border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-left: 5px solid var(--module-color);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-left: 6px solid var(--module-color);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .module-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--module-color) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
   }
 
   .module-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+    border-left-width: 8px;
+  }
+  
+  .module-card:hover::before {
+    opacity: 0.05;
   }
 
   .module-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  }
+  
+  .module-card:hover .module-icon {
+    transform: scale(1.1) rotate(5deg);
   }
 
   .module-info h3 {
-    margin: 0 0 10px 0;
-    color: #333;
-    font-size: 1.4rem;
+    margin: 0 0 12px 0;
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
   }
 
   .module-info p {
     margin: 0;
-    color: #666;
-    font-size: 0.95rem;
+    color: #6b7280;
+    font-size: 1rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
   }
 
   .footer {
     background: white;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    color: #666;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    color: #6b7280;
+    animation: fadeIn 1.2s ease-out 0.4s both;
+    background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
   }
 
   .footer p {
-    margin: 0;
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #374151;
+  }
+  
+  .footer-links {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    opacity: 0.8;
   }
 
   .module-detail {
@@ -873,19 +995,42 @@
   }
 
   .add-button {
-    padding: 12px 24px;
-    background: #10b981;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 16px;
-    font-weight: 600;
-    transition: background 0.2s;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .add-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  .add-button:hover::before {
+    left: 100%;
   }
 
   .add-button:hover {
-    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  }
+  
+  .add-button:active {
+    transform: translateY(0);
   }
 
   .search-bar {
@@ -915,19 +1060,28 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    background: #f9fafb;
-    border-radius: 8px;
-    border-left: 4px solid #3b82f6;
-    transition: background 0.2s;
+    padding: 20px;
+    background: linear-gradient(to right, #f9fafb, #ffffff);
+    border-radius: 12px;
+    border-left: 5px solid #3b82f6;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.5s ease-out;
   }
 
   .list-item:hover {
-    background: #f3f4f6;
+    background: linear-gradient(to right, #f3f4f6, #f9fafb);
+    transform: translateX(5px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border-left-width: 6px;
   }
 
   .document-item {
     cursor: pointer;
+  }
+  
+  .document-item:hover {
+    border-left-color: #667eea;
   }
 
   .item-main {

@@ -5,6 +5,48 @@ All notable changes to PflegeDMS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2024-12-25
+
+### Added - Improved UI/UX Design
+
+#### Visual Enhancements
+- **Modern Animations**: Smooth fade-in and slide-in animations throughout the interface
+- **Enhanced Cards**: Beautiful gradient backgrounds with subtle hover effects
+- **Improved Shadows**: Deeper, more professional shadow effects for better depth perception
+- **Better Typography**: Increased font weights and improved letter spacing for better readability
+- **Interactive Elements**: Enhanced hover states with smooth transitions and scale effects
+
+#### Dashboard Improvements
+- **Animated Statistics**: Statistics cards now have hover animations and glow effects
+- **Gradient Backgrounds**: Subtle gradients on cards for a more modern look
+- **Enhanced Module Cards**: Improved hover effects with icon animations and color transitions
+- **Better Spacing**: Increased padding and margins for a more spacious, breathable layout
+
+#### Document Management UI
+- **Improved List Items**: Enhanced document cards with gradient backgrounds
+- **Better Hover Effects**: Smooth transitions with transform effects on hover
+- **Enhanced Buttons**: Gradient buttons with shine effects and shadow animations
+- **Visual Feedback**: Better visual indicators for interactive elements
+
+#### Technical Improvements
+- **CSS Animations**: Added keyframe animations (fadeIn, slideIn, pulse)
+- **Cubic Bezier Transitions**: Smoother, more natural animation curves
+- **Z-index Management**: Proper layering for overlay effects
+- **Fixed Background**: Background gradient now fixed for better visual consistency
+
+### Changed
+- Version updated from 1.4.0 to 1.5.0
+- Footer text updated to "Professional Document Management"
+- All card border-radius increased to 20px for more modern look
+- Button styles enhanced with gradients and shadow effects
+- Increased font sizes for better hierarchy
+
+### Technical
+- Added CSS custom properties for better maintainability
+- Improved animation performance with GPU-accelerated properties
+- Enhanced accessibility with proper focus states
+- Better responsive design with improved grid layouts
+
 ## [1.4.0] - 2024-12-25
 
 ### Added - Erweiterte Dokumentenverwaltung
