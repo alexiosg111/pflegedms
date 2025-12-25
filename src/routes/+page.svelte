@@ -1,14 +1,54 @@
 <script>
   import { onMount } from 'svelte';
+  import { formatDate, formatTime } from '../lib/services/utilService';
 
   let platform = 'web';
   let currentModule = null;
+  let currentUser = null;
+  let isAuthenticated = false;
+  let authToken = null;
 
-  onMount(() => {
+  // Data arrays
+  let patients = [];
+  let appointments = [];
+  let documents = [];
+  let staff = [];
+  let users = [];
+
+  // Editing states
+  let editingPatient = null;
+  let editingAppointment = null;
+  let editingDocument = null;
+  let editingStaff = null;
+  let editingUser = null;
+  let showAddModal = false;
+
+  // Search and filter
+  let searchQuery = '';
+
+  // Login form
+  let showLoginModal = false;
+  let loginUsername = '';
+  let loginPassword = '';
+  let loginError = '';
+
+  onMount(async () => {
     if (typeof window !== 'undefined' && window.electron) {
       platform = window.electron.platform;
     }
-    loadFromStorage();
+    
+    // Check for existing auth token
+    const storedToken = localStorage.getItem('pflegedms_auth_token');
+    if (storedToken) {
+      await verifyToken(storedToken);
+    }
+    
+    // Load initial data if authenticated
+    if (isAuthenticated) {
+      await loadData();
+    } else {
+      showLoginModal = true;
+    }
   });
 
   const modules = [
@@ -17,68 +57,143 @@
       title: 'Patientenverwaltung',
       icon: '📋',
       description: 'Verwalten Sie Ihre Patienteninformationen',
-      color: '#4F46E5'
+      color: '#4F46E5',
+      permission: 'read_patient'
     },
     {
       id: 'schedule',
       title: 'Terminplanung',
       icon: '📅',
       description: 'Planen und verwalten Sie Termine',
-      color: '#059669'
+      color: '#059669',
+      permission: 'read_appointment'
     },
     {
       id: 'documentation',
       title: 'Dokumentation',
       icon: '📄',
       description: 'Erstellen und verwalten Sie Dokumentationen',
-      color: '#DC2626'
+      color: '#DC2626',
+      permission: 'read_document'
     },
     {
       id: 'staff',
       title: 'Mitarbeiterverwaltung',
       icon: '👥',
       description: 'Verwalten Sie Ihr Pflegeteam',
-      color: '#7C3AED'
+      color: '#7C3AED',
+      permission: 'manage_users'
+    },
+    {
+      id: 'users',
+      title: 'Benutzerverwaltung',
+      icon: '👤',
+      description: 'Verwalten Sie Benutzer und Berechtigungen',
+      color: '#F59E0B',
+      permission: 'manage_users'
+    },
+    {
+      id: 'audit',
+      title: 'Audit-Logs',
+      icon: '📊',
+      description: 'Anzeigen von Systemaktivitäten',
+      color: '#10B981',
+      permission: 'view_audit_logs'
     }
   ];
 
-  let patients = [];
-  let appointments = [];
-  let documents = [];
-  let staff = [];
-
-  let editingPatient = null;
-  let editingAppointment = null;
-  let editingDocument = null;
-  let editingStaff = null;
-  let showAddModal = false;
-
-  let searchQuery = '';
-
-  function loadFromStorage() {
+  async function loadData() {
     try {
-      const storedPatients = localStorage.getItem('pflegedms_patients');
-      const storedAppointments = localStorage.getItem('pflegedms_appointments');
-      const storedDocuments = localStorage.getItem('pflegedms_documents');
-      const storedStaff = localStorage.getItem('pflegedms_staff');
+      if (!isAuthenticated) return;
 
-      if (storedPatients) patients = JSON.parse(storedPatients);
-      if (storedAppointments) appointments = JSON.parse(storedAppointments);
-      if (storedDocuments) documents = JSON.parse(storedDocuments);
-      if (storedStaff) staff = JSON.parse(storedStaff);
-    } catch (e) {
-      console.error('Error loading from storage:', e);
+      // Load patients
+      patients = await window.electron.database.getPatients({ search: searchQuery });
+      
+      // Load appointments
+      appointments = await window.electron.database.getAppointments({ search: searchQuery });
+      
+      // Load documents
+      documents = await window.electron.database.getDocuments({ search: searchQuery });
+      
+      // Load staff
+      staff = await window.electron.database.getStaff({ search: searchQuery });
+      
+      // Load users (if admin)
+      if (currentUser && window.electron.database.hasRole(currentUser.id, 'admin')) {
+        users = await window.electron.database.getUsers({ search: searchQuery });
+      }
+      
+    } catch (error) {
+      console.error('Failed to load data:', error);
     }
   }
 
-  function saveToStorage() {
-    localStorage.setItem('pflegedms_patients', JSON.stringify(patients));
-    localStorage.setItem('pflegedms_appointments', JSON.stringify(appointments));
-    localStorage.setItem('pflegedms_documents', JSON.stringify(documents));
-    localStorage.setItem('pflegedms_staff', JSON.stringify(staff));
+  async function verifyToken(token) {
+    try {
+      const result = await window.electron.database.verifyToken(token);
+      if (result.valid) {
+        currentUser = result.user;
+        isAuthenticated = true;
+        authToken = token;
+        localStorage.setItem('pflegedms_auth_token', token);
+        await loadData();
+        return true;
+      } else {
+        logout();
+        return false;
+      }
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      logout();
+      return false;
+    }
+  }
+
+  async function login() {
+    try {
+      const result = await window.electron.database.login(loginUsername, loginPassword);
+      
+      if (result.success) {
+        currentUser = result.user;
+        isAuthenticated = true;
+        authToken = result.token;
+        localStorage.setItem('pflegedms_auth_token', result.token);
+        loginError = '';
+        showLoginModal = false;
+        await loadData();
+      } else {
+        loginError = result.error || 'Anmeldung fehlgeschlagen';
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      loginError = 'Anmeldung fehlgeschlagen';
+    }
+  }
+
+  function logout() {
+    currentUser = null;
+    isAuthenticated = false;
+    authToken = null;
+    localStorage.removeItem('pflegedms_auth_token');
+    showLoginModal = true;
+  }
+
+  function checkPermission(permission) {
+    if (!currentUser) return false;
+    return window.electron.database.checkPermission(currentUser.id, permission);
+  }
+
+  function hasRole(role) {
+    if (!currentUser) return false;
+    return window.electron.database.hasRole(currentUser.id, role);
   }
 
   function openModule(moduleId) {
+    const module = modules.find(m => m.id === moduleId);
+    if (module && module.permission && !checkPermission(module.permission)) {
+      alert('Sie haben keine Berechtigung für dieses Modul');
+      return;
+    }
     currentModule = moduleId;
   }
 
@@ -87,19 +202,114 @@
   }
 
   function openAddModal(type) {
-    if (type === 'patient') {
-      editingPatient = { id: '', name: '', birthDate: '', address: '', phone: '', insurance: '', diagnosis: '', notes: '' };
-    } else if (type === 'appointment') {
-      editingAppointment = { id: '', title: '', date: '', time: '', patientId: '', staffId: '', notes: '' };
-    } else if (type === 'document') {
-      editingDocument = { id: '', title: '', date: '', patientId: '', type: '', notes: '' };
-    } else if (type === 'staff') {
-      editingStaff = { id: '', name: '', position: '', phone: '', email: '', qualifications: '', notes: '' };
+    if (type === 'patient' && !checkPermission('create_patient')) {
+      alert('Sie haben keine Berechtigung zum Erstellen von Patienten');
+      return;
     }
+    
+    if (type === 'appointment' && !checkPermission('create_appointment')) {
+      alert('Sie haben keine Berechtigung zum Erstellen von Terminen');
+      return;
+    }
+    
+    if (type === 'document' && !checkPermission('create_document')) {
+      alert('Sie haben keine Berechtigung zum Erstellen von Dokumenten');
+      return;
+    }
+    
+    if (type === 'staff' && !checkPermission('manage_users')) {
+      alert('Sie haben keine Berechtigung zum Erstellen von Mitarbeitern');
+      return;
+    }
+    
+    if (type === 'user' && !checkPermission('manage_users')) {
+      alert('Sie haben keine Berechtigung zum Erstellen von Benutzern');
+      return;
+    }
+    
+    if (type === 'patient') {
+      editingPatient = { 
+        id: null, 
+        first_name: '', 
+        last_name: '', 
+        birth_date: '', 
+        address: '', 
+        phone: '', 
+        insurance: '', 
+        diagnosis: '', 
+        notes: '' 
+      };
+    } else if (type === 'appointment') {
+      editingAppointment = { 
+        id: null,
+        title: '', 
+        appointment_date: '', 
+        appointment_time: '', 
+        patient_id: null, 
+        staff_id: null, 
+        notes: '' 
+      };
+    } else if (type === 'document') {
+      editingDocument = { 
+        id: null,
+        title: '', 
+        document_date: '', 
+        patient_id: null, 
+        document_type: '', 
+        notes: '' 
+      };
+    } else if (type === 'staff') {
+      editingStaff = { 
+        id: null,
+        first_name: '', 
+        last_name: '', 
+        position: '', 
+        phone: '', 
+        email: '', 
+        qualifications: '', 
+        notes: '' 
+      };
+    } else if (type === 'user') {
+      editingUser = { 
+        id: null,
+        username: '', 
+        email: '', 
+        first_name: '', 
+        last_name: '', 
+        password: '', 
+        is_active: true 
+      };
+    }
+    
     showAddModal = true;
   }
 
   function openEditModal(type, item) {
+    if (type === 'patient' && !checkPermission('update_patient')) {
+      alert('Sie haben keine Berechtigung zum Bearbeiten von Patienten');
+      return;
+    }
+    
+    if (type === 'appointment' && !checkPermission('update_appointment')) {
+      alert('Sie haben keine Berechtigung zum Bearbeiten von Terminen');
+      return;
+    }
+    
+    if (type === 'document' && !checkPermission('update_document')) {
+      alert('Sie haben keine Berechtigung zum Bearbeiten von Dokumenten');
+      return;
+    }
+    
+    if (type === 'staff' && !checkPermission('manage_users')) {
+      alert('Sie haben keine Berechtigung zum Bearbeiten von Mitarbeitern');
+      return;
+    }
+    
+    if (type === 'user' && !checkPermission('manage_users')) {
+      alert('Sie haben keine Berechtigung zum Bearbeiten von Benutzern');
+      return;
+    }
+    
     if (type === 'patient') {
       editingPatient = { ...item };
     } else if (type === 'appointment') {
@@ -108,7 +318,10 @@
       editingDocument = { ...item };
     } else if (type === 'staff') {
       editingStaff = { ...item };
+    } else if (type === 'user') {
+      editingUser = { ...item, password: '' };
     }
+    
     showAddModal = true;
   }
 
@@ -117,112 +330,260 @@
     editingAppointment = null;
     editingDocument = null;
     editingStaff = null;
+    editingUser = null;
     showAddModal = false;
   }
 
-  function savePatient() {
-    if (editingPatient.id) {
-      const index = patients.findIndex(p => p.id === editingPatient.id);
-      if (index !== -1) patients[index] = editingPatient;
-    } else {
-      editingPatient.id = Date.now().toString();
-      patients.push(editingPatient);
+  async function savePatient() {
+    try {
+      if (editingPatient.id) {
+        await window.electron.database.updatePatient(editingPatient.id, editingPatient, currentUser.id);
+      } else {
+        await window.electron.database.createPatient(editingPatient, currentUser.id);
+      }
+      
+      await loadData();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to save patient:', error);
+      alert('Fehler beim Speichern des Patienten');
     }
-    saveToStorage();
-    closeModal();
   }
 
-  function saveAppointment() {
-    if (editingAppointment.id) {
-      const index = appointments.findIndex(a => a.id === editingAppointment.id);
-      if (index !== -1) appointments[index] = editingAppointment;
-    } else {
-      editingAppointment.id = Date.now().toString();
-      appointments.push(editingAppointment);
+  async function saveAppointment() {
+    try {
+      if (editingAppointment.id) {
+        await window.electron.database.updateAppointment(editingAppointment.id, editingAppointment, currentUser.id);
+      } else {
+        await window.electron.database.createAppointment(editingAppointment, currentUser.id);
+      }
+      
+      await loadData();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to save appointment:', error);
+      alert('Fehler beim Speichern des Termins');
     }
-    saveToStorage();
-    closeModal();
   }
 
-  function saveDocument() {
-    if (editingDocument.id) {
-      const index = documents.findIndex(d => d.id === editingDocument.id);
-      if (index !== -1) documents[index] = editingDocument;
-    } else {
-      editingDocument.id = Date.now().toString();
-      documents.push(editingDocument);
+  async function saveDocument() {
+    try {
+      if (editingDocument.id) {
+        await window.electron.database.updateDocument(editingDocument.id, editingDocument, currentUser.id);
+      } else {
+        await window.electron.database.createDocument(editingDocument, currentUser.id);
+      }
+      
+      await loadData();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to save document:', error);
+      alert('Fehler beim Speichern des Dokuments');
     }
-    saveToStorage();
-    closeModal();
   }
 
-  function saveStaff() {
-    if (editingStaff.id) {
-      const index = staff.findIndex(s => s.id === editingStaff.id);
-      if (index !== -1) staff[index] = editingStaff;
-    } else {
-      editingStaff.id = Date.now().toString();
-      staff.push(editingStaff);
+  async function saveStaff() {
+    try {
+      if (editingStaff.id) {
+        await window.electron.database.updateStaff(editingStaff.id, editingStaff, currentUser.id);
+      } else {
+        await window.electron.database.createStaff(editingStaff, currentUser.id);
+      }
+      
+      await loadData();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to save staff:', error);
+      alert('Fehler beim Speichern des Mitarbeiters');
     }
-    saveToStorage();
-    closeModal();
   }
 
-  function deletePatient(id) {
+  async function saveUser() {
+    try {
+      if (editingUser.id) {
+        // Update existing user
+        const userData = {
+          username: editingUser.username,
+          email: editingUser.email,
+          first_name: editingUser.first_name,
+          last_name: editingUser.last_name,
+          is_active: editingUser.is_active
+        };
+        
+        await window.electron.database.updateUser(editingUser.id, userData, currentUser.id);
+        
+        // Update password if provided
+        if (editingUser.password) {
+          const passwordHash = await window.electron.database.updateUserPassword(
+            editingUser.id,
+            editingUser.password,
+            currentUser.id
+          );
+        }
+      } else {
+        // Create new user
+        const passwordHash = await bcrypt.hash(editingUser.password, 10);
+        const newUser = {
+          username: editingUser.username,
+          email: editingUser.email,
+          password_hash: passwordHash,
+          first_name: editingUser.first_name,
+          last_name: editingUser.last_name,
+          is_active: editingUser.is_active
+        };
+        
+        await window.electron.database.createUser(newUser);
+      }
+      
+      await loadData();
+      closeModal();
+    } catch (error) {
+      console.error('Failed to save user:', error);
+      alert('Fehler beim Speichern des Benutzers');
+    }
+  }
+
+  async function deletePatient(id) {
+    if (!checkPermission('delete_patient')) {
+      alert('Sie haben keine Berechtigung zum Löschen von Patienten');
+      return;
+    }
+    
     if (confirm('Möchten Sie diesen Patienten wirklich löschen?')) {
-      patients = patients.filter(p => p.id !== id);
-      saveToStorage();
+      try {
+        await window.electron.database.deletePatient(id, currentUser.id);
+        await loadData();
+      } catch (error) {
+        console.error('Failed to delete patient:', error);
+        alert('Fehler beim Löschen des Patienten');
+      }
     }
   }
 
-  function deleteAppointment(id) {
+  async function deleteAppointment(id) {
+    if (!checkPermission('delete_appointment')) {
+      alert('Sie haben keine Berechtigung zum Löschen von Terminen');
+      return;
+    }
+    
     if (confirm('Möchten Sie diesen Termin wirklich löschen?')) {
-      appointments = appointments.filter(a => a.id !== id);
-      saveToStorage();
+      try {
+        await window.electron.database.deleteAppointment(id, currentUser.id);
+        await loadData();
+      } catch (error) {
+        console.error('Failed to delete appointment:', error);
+        alert('Fehler beim Löschen des Termins');
+      }
     }
   }
 
-  function deleteDocument(id) {
+  async function deleteDocument(id) {
+    if (!checkPermission('delete_document')) {
+      alert('Sie haben keine Berechtigung zum Löschen von Dokumenten');
+      return;
+    }
+    
     if (confirm('Möchten Sie dieses Dokument wirklich löschen?')) {
-      documents = documents.filter(d => d.id !== id);
-      saveToStorage();
+      try {
+        await window.electron.database.deleteDocument(id, currentUser.id);
+        await loadData();
+      } catch (error) {
+        console.error('Failed to delete document:', error);
+        alert('Fehler beim Löschen des Dokuments');
+      }
     }
   }
 
-  function deleteStaff(id) {
+  async function deleteStaff(id) {
+    if (!checkPermission('manage_users')) {
+      alert('Sie haben keine Berechtigung zum Löschen von Mitarbeitern');
+      return;
+    }
+    
     if (confirm('Möchten Sie diesen Mitarbeiter wirklich löschen?')) {
-      staff = staff.filter(s => s.id !== id);
-      saveToStorage();
+      try {
+        await window.electron.database.deleteStaff(id, currentUser.id);
+        await loadData();
+      } catch (error) {
+        console.error('Failed to delete staff:', error);
+        alert('Fehler beim Löschen des Mitarbeiters');
+      }
     }
   }
 
+  async function deleteUser(id) {
+    if (!checkPermission('manage_users')) {
+      alert('Sie haben keine Berechtigung zum Löschen von Benutzern');
+      return;
+    }
+    
+    if (confirm('Möchten Sie diesen Benutzer wirklich löschen?')) {
+      try {
+        await window.electron.database.deleteUser(id, currentUser.id);
+        await loadData();
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+        alert('Fehler beim Löschen des Benutzers');
+      }
+    }
+  }
+
+  // Filtered data using reactive statements
   $: filteredPatients = patients.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.diagnosis?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   $: filteredAppointments = appointments.filter(a =>
-    a.title.toLowerCase().includes(searchQuery.toLowerCase())
+    a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (a.patient_name && a.patient_name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   $: filteredDocuments = documents.filter(d =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase())
+    d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (d.patient_name && d.patient_name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   $: filteredStaff = staff.filter(s =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.position?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
+  $: filteredUsers = users.filter(u =>
+    u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.last_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 </script>
 
 <main>
-  {#if currentModule}
+  {#if !isAuthenticated}
+    <div class="login-modal">
+      <div class="login-content">
+        <h2>PflegeDMS Anmeldung</h2>
+        <form on:submit|preventDefault={login}>
+          <div class="form-group">
+            <label>Benutzername</label>
+            <input type="text" bind:value={loginUsername} required />
+          </div>
+          <div class="form-group">
+            <label>Passwort</label>
+            <input type="password" bind:value={loginPassword} required />
+          </div>
+          {#if loginError}
+            <div class="error-message">{loginError}</div>
+          {/if}
+          <button type="submit" class="login-button">Anmelden</button>
+        </form>
+        <div class="login-info">
+          <p>Standard-Anmeldung: admin/admin123</p>
+        </div>
+      </div>
+    </div>
+  {:else if currentModule}
     <div class="module-detail">
       <button class="back-button" on:click={goBack}>
         ← Zurück zum Dashboard
@@ -234,9 +595,11 @@
             <span class="module-icon">{modules.find(m => m.id === currentModule)?.icon}</span>
             {modules.find(m => m.id === currentModule)?.title}
           </h1>
-          <button class="add-button" on:click={() => openAddModal(currentModule.slice(0, -1))}>
-            + Hinzufügen
-          </button>
+          {#if currentModule !== 'audit'}
+            <button class="add-button" on:click={() => openAddModal(currentModule.slice(0, -1))}>
+              + Hinzufügen
+            </button>
+          {/if}
         </header>
 
         <div class="search-bar">
@@ -248,8 +611,8 @@
             {#each filteredPatients as patient}
               <div class="list-item">
                 <div class="item-main">
-                  <h3>{patient.name}</h3>
-                  <p class="item-detail">{formatDate(patient.birthDate)} | {patient.insurance}</p>
+                  <h3>{patient.first_name} {patient.last_name}</h3>
+                  <p class="item-detail">{formatDate(patient.birth_date)} | {patient.insurance}</p>
                 </div>
                 <div class="item-actions">
                   <button class="edit-btn" on:click={() => openEditModal('patient', patient)}>✏️</button>
@@ -265,7 +628,13 @@
               <div class="list-item">
                 <div class="item-main">
                   <h3>{appointment.title}</h3>
-                  <p class="item-detail">{formatDate(appointment.date)} um {appointment.time}</p>
+                  <p class="item-detail">{formatDate(appointment.appointment_date)} um {formatTime(appointment.appointment_time)}</p>
+                  {#if appointment.patient_name}
+                    <p class="item-subdetail">Patient: {appointment.patient_name}</p>
+                  {/if}
+                  {#if appointment.staff_name}
+                    <p class="item-subdetail">Mitarbeiter: {appointment.staff_name}</p>
+                  {/if}
                 </div>
                 <div class="item-actions">
                   <button class="edit-btn" on:click={() => openEditModal('appointment', appointment)}>✏️</button>
@@ -281,7 +650,10 @@
               <div class="list-item">
                 <div class="item-main">
                   <h3>{document.title}</h3>
-                  <p class="item-detail">{formatDate(document.date)} | {document.type}</p>
+                  <p class="item-detail">{formatDate(document.document_date)} | {document.document_type}</p>
+                  {#if document.patient_name}
+                    <p class="item-subdetail">Patient: {document.patient_name}</p>
+                  {/if}
                 </div>
                 <div class="item-actions">
                   <button class="edit-btn" on:click={() => openEditModal('document', document)}>✏️</button>
@@ -296,7 +668,7 @@
             {#each filteredStaff as staffMember}
               <div class="list-item">
                 <div class="item-main">
-                  <h3>{staffMember.name}</h3>
+                  <h3>{staffMember.first_name} {staffMember.last_name}</h3>
                   <p class="item-detail">{staffMember.position} | {staffMember.phone}</p>
                 </div>
                 <div class="item-actions">
@@ -308,6 +680,29 @@
             {#if filteredStaff.length === 0}
               <p class="empty-state">Keine Mitarbeiter gefunden</p>
             {/if}
+          {:else if currentModule === 'users'}
+            {#each filteredUsers as user}
+              <div class="list-item">
+                <div class="item-main">
+                  <h3>{user.username}</h3>
+                  <p class="item-detail">{user.email}</p>
+                  <p class="item-subdetail">{user.first_name} {user.last_name}</p>
+                </div>
+                <div class="item-actions">
+                  <button class="edit-btn" on:click={() => openEditModal('user', user)}>✏️</button>
+                  <button class="delete-btn" on:click={() => deleteUser(user.id)}>🗑️</button>
+                </div>
+              </div>
+            {/each}
+            {#if filteredUsers.length === 0}
+              <p class="empty-state">Keine Benutzer gefunden</p>
+            {/if}
+          {:else if currentModule === 'audit'}
+            <div class="audit-logs">
+              <h3>Audit-Logs</h3>
+              <p>Systemaktivitäten und Benutzeraktionen werden hier protokolliert.</p>
+              <!-- Audit log display would go here -->
+            </div>
           {/if}
         </div>
       </div>
@@ -317,17 +712,23 @@
       <div class="modal-overlay" on:click={closeModal}>
         <div class="modal-content" on:click|stopPropagation>
           <button class="close-modal" on:click={closeModal}>×</button>
-          <h2>{editingPatient?.id ? 'Patient bearbeiten' : 'Neuer Patient'}</h2>
-
+          
           {#if editingPatient}
+            <h2>{editingPatient?.id ? 'Patient bearbeiten' : 'Neuer Patient'}</h2>
             <form on:submit|preventDefault={savePatient}>
-              <label>
-                Name
-                <input type="text" bind:value={editingPatient.name} required />
-              </label>
+              <div class="form-grid">
+                <label>
+                  Vorname
+                  <input type="text" bind:value={editingPatient.first_name} required />
+                </label>
+                <label>
+                  Nachname
+                  <input type="text" bind:value={editingPatient.last_name} required />
+                </label>
+              </div>
               <label>
                 Geburtsdatum
-                <input type="date" bind:value={editingPatient.birthDate} />
+                <input type="date" bind:value={editingPatient.birth_date} />
               </label>
               <label>
                 Adresse
@@ -358,29 +759,31 @@
                 Titel
                 <input type="text" bind:value={editingAppointment.title} required />
               </label>
-              <label>
-                Datum
-                <input type="date" bind:value={editingAppointment.date} required />
-              </label>
-              <label>
-                Uhrzeit
-                <input type="time" bind:value={editingAppointment.time} required />
-              </label>
+              <div class="form-grid">
+                <label>
+                  Datum
+                  <input type="date" bind:value={editingAppointment.appointment_date} required />
+                </label>
+                <label>
+                  Uhrzeit
+                  <input type="time" bind:value={editingAppointment.appointment_time} required />
+                </label>
+              </div>
               <label>
                 Patient
-                <select bind:value={editingAppointment.patientId}>
+                <select bind:value={editingAppointment.patient_id}>
                   <option value="">-- Patient auswählen --</option>
                   {#each patients as patient}
-                    <option value={patient.id}>{patient.name}</option>
+                    <option value={patient.id}>{patient.first_name} {patient.last_name}</option>
                   {/each}
                 </select>
               </label>
               <label>
                 Mitarbeiter
-                <select bind:value={editingAppointment.staffId}>
+                <select bind:value={editingAppointment.staff_id}>
                   <option value="">-- Mitarbeiter auswählen --</option>
                   {#each staff as staffMember}
-                    <option value={staffMember.id}>{staffMember.name}</option>
+                    <option value={staffMember.id}>{staffMember.first_name} {staffMember.last_name}</option>
                   {/each}
                 </select>
               </label>
@@ -399,24 +802,26 @@
               </label>
               <label>
                 Datum
-                <input type="date" bind:value={editingDocument.date} required />
+                <input type="date" bind:value={editingDocument.document_date} required />
               </label>
               <label>
                 Typ
-                <select bind:value={editingDocument.type}>
+                <select bind:value={editingDocument.document_type}>
                   <option value="">-- Typ auswählen --</option>
                   <option value="Bericht">Bericht</option>
                   <option value="Arztbrief">Arztbrief</option>
                   <option value="Verordnung">Verordnung</option>
                   <option value="Pflegeplan">Pflegeplan</option>
+                  <option value="Laborbericht">Laborbericht</option>
+                  <option value="Sonstiges">Sonstiges</option>
                 </select>
               </label>
               <label>
                 Patient
-                <select bind:value={editingDocument.patientId}>
+                <select bind:value={editingDocument.patient_id}>
                   <option value="">-- Patient auswählen --</option>
                   {#each patients as patient}
-                    <option value={patient.id}>{patient.name}</option>
+                    <option value={patient.id}>{patient.first_name} {patient.last_name}</option>
                   {/each}
                 </select>
               </label>
@@ -429,10 +834,16 @@
           {:else if editingStaff}
             <h2>{editingStaff?.id ? 'Mitarbeiter bearbeiten' : 'Neuer Mitarbeiter'}</h2>
             <form on:submit|preventDefault={saveStaff}>
-              <label>
-                Name
-                <input type="text" bind:value={editingStaff.name} required />
-              </label>
+              <div class="form-grid">
+                <label>
+                  Vorname
+                  <input type="text" bind:value={editingStaff.first_name} required />
+                </label>
+                <label>
+                  Nachname
+                  <input type="text" bind:value={editingStaff.last_name} required />
+                </label>
+              </div>
               <label>
                 Position
                 <input type="text" bind:value={editingStaff.position} />
@@ -455,6 +866,46 @@
               </label>
               <button type="submit" class="submit-button">Speichern</button>
             </form>
+          {:else if editingUser}
+            <h2>{editingUser?.id ? 'Benutzer bearbeiten' : 'Neuer Benutzer'}</h2>
+            <form on:submit|preventDefault={saveUser}>
+              <div class="form-grid">
+                <label>
+                  Benutzername
+                  <input type="text" bind:value={editingUser.username} required />
+                </label>
+                <label>
+                  E-Mail
+                  <input type="email" bind:value={editingUser.email} required />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Vorname
+                  <input type="text" bind:value={editingUser.first_name} />
+                </label>
+                <label>
+                  Nachname
+                  <input type="text" bind:value={editingUser.last_name} />
+                </label>
+              </div>
+              {#if !editingUser.id}
+                <label>
+                  Passwort
+                  <input type="password" bind:value={editingUser.password} required />
+                </label>
+              {:else}
+                <label>
+                  Neues Passwort (leer lassen für kein Ändern)
+                  <input type="password" bind:value={editingUser.password} />
+                </label>
+              {/if}
+              <label>
+                <input type="checkbox" bind:checked={editingUser.is_active} />
+                Aktiv
+              </label>
+              <button type="submit" class="submit-button">Speichern</button>
+            </form>
           {/if}
         </div>
       </div>
@@ -462,11 +913,19 @@
   {:else}
     <div class="dashboard">
       <header class="header">
-        <h1>PflegeDMS</h1>
-        <p class="subtitle">Pflegedienst Management System</p>
-        {#if platform !== 'web'}
-          <span class="platform-badge">{platform}</span>
-        {/if}
+        <div class="header-content">
+          <h1>PflegeDMS</h1>
+          <p class="subtitle">Pflegedienst Management System</p>
+          {#if platform !== 'web'}
+            <span class="platform-badge">{platform}</span>
+          {/if}
+        </div>
+        <div class="user-info">
+          {#if currentUser}
+            <span class="user-name">Angemeldet als: {currentUser.username}</span>
+            <button class="logout-button" on:click={logout}>Abmelden</button>
+          {/if}
+        </div>
       </header>
 
       <div class="welcome-section">
@@ -476,210 +935,441 @@
 
       <div class="modules-grid">
         {#each modules as module}
-          <div
-            class="module-card"
-            style="--module-color: {module.color}"
-            on:click={() => openModule(module.id)}
-            on:keydown={(e) => e.key === 'Enter' && openModule(module.id)}
-            role="button"
-            tabindex="0"
-          >
-            <div class="module-icon">{module.icon}</div>
-            <div class="module-info">
-              <h3>{module.title}</h3>
-              <p>{module.description}</p>
-            </div>
-          </div>
+          {#if !module.permission || checkPermission(module.permission)}
+            <button
+              class="module-card"
+              style="--module-color: {module.color}"
+              on:click={() => openModule(module.id)}
+              on:keydown={(e) => e.key === 'Enter' && openModule(module.id)}
+              type="button"
+            >
+              <div class="module-icon">{module.icon}</div>
+              <div class="module-info">
+                <h3>{module.title}</h3>
+                <p>{module.description}</p>
+              </div>
+            </button>
+          {/if}
         {/each}
       </div>
 
       <footer class="footer">
-        <p>Version 1.4.0</p>
+        <p>Version 1.4.0 - Professionelles DMS mit RBAC und Audit-Logging</p>
       </footer>
     </div>
   {/if}
 </main>
 
 <style>
-  main {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Base styles */
+  :global(body) {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+    color: #333;
   }
 
-  .module-detail {
+  main {
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Login Modal */
+  .login-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .login-content {
+    background: white;
     padding: 2rem;
-    padding-top: 6rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90%;
+  }
+
+  .login-content h2 {
+    margin-top: 0;
+    color: #4F46E5;
+    text-align: center;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .login-button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #4F46E5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+
+  .login-button:hover {
+    background-color: #4338CA;
+  }
+
+  .error-message {
+    color: #DC2626;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .login-info {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: #666;
+    text-align: center;
+  }
+
+  /* Dashboard */
+  .dashboard {
+    flex: 1;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .header-content {
+    flex: 1;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #4F46E5;
+  }
+
+  .subtitle {
+    margin: 0.5rem 0 0;
+    color: #666;
+    font-size: 1.1rem;
+  }
+
+  .platform-badge {
+    background-color: #e0e7ff;
+    color: #4F46E5;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .user-name {
+    font-weight: 500;
+    color: #666;
+  }
+
+  .logout-button {
+    padding: 0.5rem 1rem;
+    background-color: #f3f4f6;
+    color: #666;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+
+  .logout-button:hover {
+    background-color: #e5e7eb;
+  }
+
+  .welcome-section {
+    margin-bottom: 2rem;
+  }
+
+  .welcome-section h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1f2937;
+  }
+
+  .welcome-section p {
+    margin: 0.5rem 0 0;
+    color: #6b7280;
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    flex: 1;
+  }
+
+  .module-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    border: 2px solid transparent;
+    width: 100%;
+    text-align: left;
+    border: none;
+  }
+
+  .module-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-color: var(--module-color);
+  }
+
+  .module-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .module-info h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.25rem;
+    color: #1f2937;
+  }
+
+  .module-info p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  .footer {
+    margin-top: 2rem;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+    padding: 1rem 0;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  /* Module Detail */
+  .module-detail {
+    flex: 1;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
   }
 
   .back-button {
-    position: absolute;
-    top: 2rem;
-    left: 2rem;
-    padding: 0.8rem 1.5rem;
-    background: white;
-    color: #667eea;
+    background: none;
     border: none;
-    border-radius: 10px;
-    font-weight: bold;
+    color: #4F46E5;
+    font-size: 1rem;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .back-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    text-decoration: underline;
   }
 
   .module-container {
+    flex: 1;
     background: white;
-    border-radius: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 2rem;
-    max-width: 1000px;
-    margin: 0 auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
   }
 
   .module-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1rem;
   }
 
   .module-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1f2937;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    color: #667eea;
-    margin: 0;
-    font-size: 2rem;
+    gap: 0.5rem;
   }
 
   .module-icon {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
   }
 
   .add-button {
-    padding: 0.8rem 1.5rem;
-    background: #667eea;
+    padding: 0.5rem 1rem;
+    background-color: #4F46E5;
     color: white;
     border: none;
-    border-radius: 10px;
-    font-weight: bold;
+    border-radius: 4px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    font-size: 0.875rem;
   }
 
   .add-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    background-color: #4338CA;
+  }
+
+  .search-bar {
+    margin-bottom: 1.5rem;
   }
 
   .search-bar input {
     width: 100%;
-    padding: 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     font-size: 1rem;
-    margin-bottom: 2rem;
-    box-sizing: border-box;
-  }
-
-  .search-bar input:focus {
-    outline: none;
-    border-color: #667eea;
   }
 
   .content-list {
+    flex: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
   .list-item {
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
-    background: #f8f9fa;
-    border-radius: 10px;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e5e7eb;
   }
 
-  .list-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  .item-main {
+    flex: 1;
   }
 
   .item-main h3 {
-    margin: 0 0 0.5rem 0;
-    color: #333;
-    font-size: 1.2rem;
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    color: #1f2937;
   }
 
   .item-detail {
     margin: 0;
-    color: #666;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .item-subdetail {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: #9ca3af;
   }
 
   .item-actions {
     display: flex;
     gap: 0.5rem;
+    margin-left: 1rem;
   }
 
   .edit-btn, .delete-btn {
-    padding: 0.5rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
     border: none;
-    border-radius: 5px;
     cursor: pointer;
-    font-size: 1.2rem;
-    transition: transform 0.2s;
-  }
-
-  .edit-btn:hover, .delete-btn:hover {
-    transform: scale(1.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
   }
 
   .edit-btn {
-    background: #4CAF50;
+    background-color: #fbbf24;
     color: white;
   }
 
+  .edit-btn:hover {
+    background-color: #f59e0b;
+  }
+
   .delete-btn {
-    background: #f44336;
+    background-color: #ef4444;
     color: white;
+  }
+
+  .delete-btn:hover {
+    background-color: #dc2626;
   }
 
   .empty-state {
     text-align: center;
-    padding: 3rem;
-    color: #999;
-    font-size: 1.1rem;
+    color: #9ca3af;
+    padding: 2rem;
+    font-size: 0.875rem;
   }
 
+  /* Modal */
   .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     z-index: 1000;
   }
 
   .modal-content {
     background: white;
-    border-radius: 20px;
     padding: 2rem;
-    max-width: 600px;
-    width: 90%;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 600px;
+    max-width: 90%;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
@@ -691,15 +1381,18 @@
     right: 1rem;
     background: none;
     border: none;
-    font-size: 2rem;
+    font-size: 1.5rem;
     cursor: pointer;
-    color: #666;
+    color: #6b7280;
+  }
+
+  .close-modal:hover {
+    color: #1f2937;
   }
 
   .modal-content h2 {
-    color: #667eea;
-    margin: 0 0 1.5rem 0;
-    padding-right: 2rem;
+    margin-top: 0;
+    color: #1f2937;
   }
 
   .modal-content form {
@@ -712,154 +1405,57 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    font-weight: 500;
   }
 
-  .modal-content label input,
-  .modal-content label select,
-  .modal-content label textarea {
-    padding: 0.8rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+  .modal-content input,
+  .modal-content select,
+  .modal-content textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     font-size: 1rem;
-    font-family: inherit;
   }
 
-  .modal-content label input:focus,
-  .modal-content label select:focus,
-  .modal-content label textarea:focus {
-    outline: none;
-    border-color: #667eea;
-  }
-
-  .modal-content label textarea {
+  .modal-content textarea {
     min-height: 100px;
     resize: vertical;
   }
 
-  .submit-button {
-    padding: 1rem 2rem;
-    background: #667eea;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-weight: bold;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .submit-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-  }
-
-  .dashboard {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 3rem 2rem;
-  }
-
-  .header {
-    text-align: center;
-    color: white;
-    margin-bottom: 3rem;
-  }
-
-  .header h1 {
-    font-size: 3.5rem;
-    margin: 0 0 0.5rem 0;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .subtitle {
-    font-size: 1.5rem;
-    margin: 0;
-    opacity: 0.9;
-  }
-
-  .platform-badge {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-  }
-
-  .welcome-section {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem 3rem;
-    margin-bottom: 3rem;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .welcome-section h2 {
-    color: #667eea;
-    margin: 0 0 0.5rem 0;
-    font-size: 2rem;
-  }
-
-  .welcome-section p {
-    color: #666;
-    margin: 0;
-    font-size: 1.2rem;
-  }
-
-  .modules-grid {
+  .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    width: 100%;
-    max-width: 1200px;
-  }
-
-  .module-card {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-    display: flex;
-    align-items: flex-start;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
   }
 
-  .module-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-  }
-
-  .module-card:focus {
-    outline: 2px solid var(--module-color);
-    outline-offset: 2px;
-  }
-
-  .module-icon {
-    font-size: 3rem;
-    flex-shrink: 0;
-  }
-
-  .module-info h3 {
-    color: var(--module-color);
-    margin: 0 0 0.5rem 0;
-    font-size: 1.3rem;
-  }
-
-  .module-info p {
-    color: #666;
-    margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-
-  .footer {
-    margin-top: 4rem;
+  .submit-button {
+    padding: 0.75rem;
+    background-color: #4F46E5;
     color: white;
-    opacity: 0.8;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    align-self: flex-end;
+  }
+
+  .submit-button:hover {
+    background-color: #4338CA;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .modules-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+      width: 90%;
+    }
   }
 </style>
