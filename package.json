@@ -1,6 +1,6 @@
 {
   "name": "pflegedms",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "PflegeDMS - Pflegedienst Management System",
   "type": "module",
   "main": "electron/main.js",
