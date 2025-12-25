@@ -46,10 +46,55 @@ sudo dpkg -i pflegedms_x.x.x_amd64.deb
 
 ## 🚀 Features
 
-- 📋 Patientenverwaltung
-- 📅 Terminplanung
-- 📄 Dokumentation
-- 👥 Mitarbeiterverwaltung
+### Grundfunktionen
+- 📋 **Patientenverwaltung** - Verwalten Sie alle Patienteninformationen zentral
+- 📅 **Terminplanung** - Planen und organisieren Sie Termine effizient
+- 📄 **Erweiterte Dokumentenverwaltung** - Professionelles Dokumenten-Management-System (neu in v1.4.0)
+- 👥 **Mitarbeiterverwaltung** - Organisieren Sie Ihr Pflegeteam
+
+### Erweiterte Dokumentenverwaltung (v1.4.0)
+
+#### 📁 Dokumentarten & Kategorisierung
+- 10 vordefinierte Dokumentkategorien (Pflegeplan, Ärztlicher Bericht, Vertrag, Laborergebnis, etc.)
+- Flexible Metadaten für dokumentspezifische Informationen
+- Tag-System für individuelle Kategorisierung
+- Status-Management (Entwurf, Aktiv, Archiviert, Gelöscht)
+
+#### 🔄 Versionskontrolle
+- Automatische Versionierung bei jeder Änderung
+- Vollständige Versionshistorie mit Änderungsprotokoll
+- Wiederherstellung früherer Versionen mit einem Klick
+- Vergleich zwischen Versionen
+
+#### 🔍 Suche & Filter
+- Volltextsuche über Titel, Inhalt, Tags und Metadaten
+- Erweiterte Filteroptionen nach Kategorie, Status und Tags
+- OCR-Text-Suche (Vorbereitung für zukünftige OCR-Integration)
+- Echtzeit-Suchergebnisse
+
+#### 📋 Vorlagen (Templates)
+- Vordefinierte Templates für häufige Dokumenttypen
+- Individuelle Anpassung von Templates
+- Schnelle Dokumenterstellung aus Vorlagen
+- 3 Standard-Templates: Pflegeplan, Medikationsplan, Pflegedokumentation
+
+#### ✅ Freigabe-Workflow
+- Digitale Freigabeprozesse für Dokumente
+- Freigabestatus: Ausstehend, Freigegeben, Abgelehnt
+- Kommentarfunktion für Freigaben und Ablehnungen
+- Vollständiger Freigabe-Verlauf
+
+#### 📊 Audit-Log & Nachverfolgbarkeit
+- Vollständiges Protokoll aller Dokumentaktionen
+- Erfassung von Benutzer, Zeitpunkt und Aktion
+- Nachverfolgung von Erstellung, Bearbeitung, Löschung und Freigaben
+- Device-Informationen für Compliance
+
+#### 🤖 Intelligente Funktionen
+- Automatische Dokumentklassifikation basierend auf Inhalt
+- Metadaten-Extraktion (Datum, Diagnose, Arzt)
+- Vorbereitung für OCR-Integration
+- Pattern-basierte Erkennung von Dokumenttypen
 
 ## 🛠️ Entwicklung
 
