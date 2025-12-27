@@ -1,6 +1,6 @@
 {
   "name": "pflegedms",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "PflegeDMS - Pflegedienst Management System",
   "type": "module",
   "main": "electron/main.js",
@@ -36,6 +36,7 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "tesseract.js": "^7.0.0"
   }
 }

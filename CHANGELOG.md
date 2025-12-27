@@ -5,82 +5,60 @@ All notable changes to PflegeDMS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] - 2024-12-25
-
-### Added - Final Polish & Stability
-
-#### Feature Completion
-- **Complete Document Management System**: All phases from v1.4.0 fully integrated and tested
-- **Modern UI/UX**: Beautiful, responsive design with smooth animations from v1.5.0
-- **Critical Bug Fixes**: All known issues resolved from v1.6.0
-- **Production Ready**: Stable release ready for daily use
-
-#### User Experience Improvements
-- **Improved Footer**: More professional footer with "Made with ❤️"
-- **Better Visual Feedback**: Enhanced user interactions throughout the application
-- **Consistent Design Language**: Unified design across all modules
-- **Performance Optimizations**: Faster load times and smoother animations
-
-#### Documentation & Quality
-- **Complete Documentation**: Full CHANGELOG with all features documented
-- **Code Quality**: Clean, maintainable TypeScript codebase
-- **Type Safety**: Comprehensive type definitions for all components
-- **Error Handling**: Robust error handling throughout the application
+## [1.8.0] - 2024-12-27
 
 ### Changed
-- Version updated from 1.6.0 to 1.7.0
-- Footer text enhanced with "Made with ❤️"
-- Consolidated all features from previous versions
+- Version updated from 1.6.0 to 1.8.0 for release alignment
+- All OCR features from v1.6.0 included in this release
 
-### Includes All Features
-#### From v1.4.0 - Document Management:
-- 📁 10 Document categories with flexible metadata
-- 🔄 Full version control with restore capability
-- 🔍 Advanced full-text search and filtering
-- ✅ Digital approval workflows with comments
-- 📊 Complete audit logging for compliance
-- 🤖 Automatic document classification
-- 📋 3 pre-defined document templates
-- 🏷️ Flexible tag system
-- 🔮 OCR-ready data structure
+### Note
+This is a version bump release that includes all features from v1.6.0 (see below).
 
-#### From v1.5.0 - Modern UI/UX:
-- ✨ Smooth animations (fadeIn, slideIn, pulse)
-- 🎨 Beautiful gradient backgrounds
-- 💫 Enhanced hover effects with transforms
-- 📐 Improved typography and spacing
-- 🌟 Interactive elements with glow effects
-- 📊 Animated statistics cards
-- 🎯 Icon animations on module cards
-- 💎 Professional shadows and depth
-- ⚡ GPU-accelerated animations
+## [1.6.0] - 2024-12-27
 
-#### From v1.6.0 - Bug Fixes:
-- 🐛 Fixed "Hinzufügen" button in all modules
-- 🔧 Improved module name detection
-- 🔧 Better TypeScript type safety
-- 🔧 Enhanced error handling
+### Added - OCR Document Text Extraction
 
-### Technical Highlights
-- **TypeScript**: Full type coverage for better maintainability
-- **Svelte**: Reactive components for optimal performance
-- **Service Layer**: Clean separation of concerns
-- **Modular Architecture**: Reusable, testable components
-- **LocalStorage**: Fast data access with automatic migration
-- **Event-Driven**: Clean component communication
+#### New OCR Feature
+- **OCR Text Extraction**: Automatically extract text from scanned documents using Tesseract.js
+- **Confidence-Based Verification**: View confidence scores for each extracted line of text
+  - High confidence (80-100%): Green indicator
+  - Medium confidence (60-80%): Yellow indicator
+  - Low confidence (<60%): Red indicator, requires manual verification
+- **Interactive Verification Interface**: Split-view panel showing original image and extracted text side-by-side
+  - Left panel: Original document with dynamic line highlighting
+  - Right panel: Line-by-line verification with edit capabilities
+  - Zoom and pan controls for better document readability
+- **Human-in-the-Loop Workflow**: Manual verification and correction of extracted text
+  - Click-to-edit inline text corrections
+  - Quick verify/reject buttons for each line
+  - Progress tracking with visual indicators
+- **Batch Operations**:
+  - Auto-verify all high confidence lines (>85%)
+  - Jump to low confidence lines for quick review
+  - Filter by verification status or confidence level
+- **Multi-Language Support**: German and English OCR recognition (default: German + English)
+- **Resume Capability**: Save and resume verification progress
+- **Automatic Document Classification**: Detected text is automatically analyzed to suggest document category
+- **Metadata Extraction**: Automatically extract dates, diagnoses, and other metadata from OCR text
+- **Privacy-First**: All OCR processing runs locally in browser/Electron - no external API calls
 
-### Browser Support
-- ✅ Chrome/Edge (latest)
-- ✅ Firefox (latest)
-- ✅ Safari (latest)
-- ✅ Electron Desktop App
+#### Technical Implementation
+- Added `tesseract.js` dependency for local OCR processing
+- New components:
+  - `DocumentScanUpload.svelte`: Upload and process document scans
+  - `OCRVerificationPanel.svelte`: Split-view verification interface
+  - `OCRLineItem.svelte`: Individual line verification component
+- New service: `ocrService.ts` with helper functions for OCR operations
+- Extended document types with `OCRLine`, `OCRResult`, and `DocumentOCRData` interfaces
+- Documents with verified OCR data show 🔍 OCR badge in document list
+- Worker-based processing to prevent UI freezing during OCR
+- Real-time progress indicators during text extraction
 
-### Platform Support
-- ✅ Windows (10, 11)
-- ✅ macOS (Intel & Apple Silicon)
-- ✅ Linux (AppImage & .deb)
-
-## [1.6.0] - 2024-12-25
+#### UI/UX Enhancements
+- New "🔍 OCR Scan" button in documentation module
+- Visual badges showing OCR verification status on documents
+- Smooth transitions between upload, processing, and verification stages
+- Responsive design that works on all screen sizes
 
 ### Fixed - Critical Bug Fixes
 

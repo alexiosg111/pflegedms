@@ -1,17 +1,24 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Document, DocumentTemplate, Patient, Appointment, Staff, DocumentCategory, DocumentStatus } from '$lib/types';
+  import type { Document, DocumentTemplate, Patient, Appointment, Staff, DocumentCategory, DocumentStatus, OCRResult, OCRLine, DocumentOCRData } from '$lib/types';
   import { DOCUMENT_CATEGORIES } from '$lib/types';
   import { StorageService } from '$lib/storageService';
-  import { searchDocuments, changeDocumentStatus, addApprovalRecord, restoreVersion, addAuditLog, classifyDocument, extractMetadata } from '$lib/documentService';
+  import { searchDocuments, changeDocumentStatus, addApprovalRecord, restoreVersion, addAuditLog, classifyDocument, extractMetadata, createNewDocument, updateDocumentWithOCR } from '$lib/documentService';
   import DocumentForm from '$lib/components/DocumentForm.svelte';
   import DocumentDetail from '$lib/components/DocumentDetail.svelte';
   import DocumentSearch from '$lib/components/DocumentSearch.svelte';
+  import DocumentScanUpload from '$lib/components/DocumentScanUpload.svelte';
+  import OCRVerificationPanel from '$lib/components/OCRVerificationPanel.svelte';
 
   let platform = 'web';
   let currentModule: string | null = null;
-  let currentView: 'list' | 'detail' | 'form' = 'list';
+  let currentView: 'list' | 'detail' | 'form' | 'ocr-upload' | 'ocr-verification' = 'list';
   let selectedDocument: Document | null = null;
+  
+  let ocrImageUrl: string = '';
+  let ocrResult: OCRResult | null = null;
+  let ocrFileName: string = '';
+  let pendingOCRDocument: Document | null = null;
 
   onMount(() => {
     if (typeof window !== 'undefined' && window.electron) {
@@ -285,6 +292,79 @@
     }
   }
 
+  function startOCRUpload() {
+    currentView = 'ocr-upload';
+    ocrImageUrl = '';
+    ocrResult = null;
+    ocrFileName = '';
+    pendingOCRDocument = null;
+  }
+
+  function handleOCRComplete(event: CustomEvent<{ imageUrl: string; ocrResult: OCRResult; fileName: string }>) {
+    ocrImageUrl = event.detail.imageUrl;
+    ocrResult = event.detail.ocrResult;
+    ocrFileName = event.detail.fileName;
+  }
+
+  function handleStartVerification(event: CustomEvent<{ imageUrl: string; ocrResult: OCRResult; fileName: string }>) {
+    ocrImageUrl = event.detail.imageUrl;
+    ocrResult = event.detail.ocrResult;
+    ocrFileName = event.detail.fileName;
+    currentView = 'ocr-verification';
+  }
+
+  function handleOCRVerificationComplete(event: CustomEvent<{ lines: OCRLine[]; verifiedText: string }>) {
+    if (!ocrResult) return;
+    
+    const { lines, verifiedText } = event.detail;
+    
+    const detectedCategory = classifyDocument(ocrFileName, verifiedText);
+    const extractedMetadata = extractMetadata(verifiedText);
+    
+    const newDoc = createNewDocument(
+      ocrFileName || 'Gescanntes Dokument',
+      '',
+      detectedCategory,
+      'Aus OCR-Scan erstellt'
+    );
+    
+    const ocrData: DocumentOCRData = {
+      documentId: newDoc.id,
+      imageUrl: ocrImageUrl,
+      ocrResult: {
+        ...ocrResult,
+        lines: lines
+      },
+      verificationStatus: 'completed',
+      verifiedAt: new Date().toISOString(),
+      verifiedBy: 'system'
+    };
+    
+    const docWithOCR = updateDocumentWithOCR(newDoc, ocrData, verifiedText);
+    const finalDoc = {
+      ...docWithOCR,
+      metadata: extractedMetadata,
+      originalFileName: ocrFileName
+    };
+    
+    documents = [...documents, finalDoc];
+    saveDocuments();
+    
+    currentView = 'list';
+    ocrImageUrl = '';
+    ocrResult = null;
+    ocrFileName = '';
+    pendingOCRDocument = null;
+  }
+
+  function handleOCRCancel() {
+    currentView = 'list';
+    ocrImageUrl = '';
+    ocrResult = null;
+    ocrFileName = '';
+    pendingOCRDocument = null;
+  }
+
   function saveStaffMember() {
     if (!editingStaff) return;
     
@@ -377,9 +457,16 @@
               <span class="module-icon">{modules.find(m => m.id === currentModule)?.icon}</span>
               {modules.find(m => m.id === currentModule)?.title}
             </h1>
-            <button class="add-button" on:click={() => openAddModal()}>
-              + Hinzufügen
-            </button>
+            <div class="header-actions">
+              {#if currentModule === 'documentation'}
+                <button class="ocr-button" on:click={startOCRUpload}>
+                  🔍 OCR Scan
+                </button>
+              {/if}
+              <button class="add-button" on:click={() => openAddModal()}>
+                + Hinzufügen
+              </button>
+            </div>
           </header>
 
           {#if currentModule === 'documentation'}
@@ -439,11 +526,16 @@
                         {getStatusBadge(document.status)} {document.title}
                         <span class="version-badge">v{document.version}</span>
                       </h3>
-                      {#if document.approvalStatus === 'approved'}
-                        <span class="approval-badge">✓ Freigegeben</span>
-                      {:else if document.approvalStatus === 'pending'}
-                        <span class="approval-badge pending">⏳ Ausstehend</span>
-                      {/if}
+                      <div class="badges">
+                        {#if document.ocrData?.verificationStatus === 'completed'}
+                          <span class="ocr-badge" title="OCR verifiziert">🔍 OCR</span>
+                        {/if}
+                        {#if document.approvalStatus === 'approved'}
+                          <span class="approval-badge">✓ Freigegeben</span>
+                        {:else if document.approvalStatus === 'pending'}
+                          <span class="approval-badge pending">⏳ Ausstehend</span>
+                        {/if}
+                      </div>
                     </div>
                     <p class="item-detail">
                       {getCategoryLabel(document.category)} | {formatDate(document.createdAt)}
@@ -507,6 +599,18 @@
             on:restoreVersion={handleRestoreVersion}
             on:approve={handleApprove}
             on:reject={handleReject}
+          />
+        {:else if currentView === 'ocr-upload'}
+          <DocumentScanUpload
+            on:ocrComplete={handleOCRComplete}
+            on:startVerification={handleStartVerification}
+          />
+        {:else if currentView === 'ocr-verification' && ocrResult}
+          <OCRVerificationPanel
+            imageUrl={ocrImageUrl}
+            ocrResult={ocrResult}
+            on:complete={handleOCRVerificationComplete}
+            on:cancel={handleOCRCancel}
           />
         {/if}
       </div>
@@ -675,9 +779,9 @@
       </div>
 
       <footer class="footer">
-        <p>Version 1.7.0 • Professional Document Management System</p>
+        <p>Version 1.8.0 • Professional Document Management</p>
         <div class="footer-links">
-          <span>🚀 Powered by PflegeDMS • Made with ❤️</span>
+          <span>🚀 Powered by PflegeDMS</span>
         </div>
       </footer>
     </div>
@@ -1036,6 +1140,34 @@
     transform: translateY(0);
   }
 
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .ocr-button {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  }
+
+  .ocr-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  }
+
+  .ocr-button:active {
+    transform: translateY(0);
+  }
+
   .search-bar {
     margin-bottom: 20px;
   }
@@ -1112,6 +1244,12 @@
     font-weight: normal;
   }
 
+  .badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
   .approval-badge {
     font-size: 0.75rem;
     padding: 4px 10px;
@@ -1124,6 +1262,15 @@
   .approval-badge.pending {
     background: #fef3c7;
     color: #92400e;
+  }
+
+  .ocr-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 12px;
+    font-weight: 600;
   }
 
   .item-detail {

@@ -79,6 +79,7 @@ export interface Document {
   accessControl: DocumentAccessControl[];
   auditLog: AuditLogEntry[];
   ocrText?: string;
+  ocrData?: DocumentOCRData;
   originalFileName?: string;
 }
 
@@ -122,6 +123,36 @@ export interface Staff {
   email: string;
   qualifications: string;
   notes: string;
+}
+
+export interface OCRLine {
+  id: string;
+  text: string;
+  confidence: number;
+  boundingBox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  verified: boolean;
+  correctedText?: string;
+}
+
+export interface OCRResult {
+  fullText: string;
+  lines: OCRLine[];
+  language: string;
+  processingTime: number;
+}
+
+export interface DocumentOCRData {
+  documentId: string;
+  imageUrl: string;
+  ocrResult: OCRResult;
+  verificationStatus: 'pending' | 'in-progress' | 'completed';
+  verifiedAt?: string;
+  verifiedBy?: string;
 }
 
 export const DOCUMENT_CATEGORIES: { value: DocumentCategory; label: string; description: string }[] = [
