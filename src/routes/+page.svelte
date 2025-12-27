@@ -675,9 +675,9 @@
       </div>
 
       <footer class="footer">
-        <p>Version 1.6.0 • Professional Document Management</p>
+        <p>Version 1.7.0 • Professional Document Management System</p>
         <div class="footer-links">
-          <span>🚀 Powered by PflegeDMS</span>
+          <span>🚀 Powered by PflegeDMS • Made with ❤️</span>
         </div>
       </footer>
     </div>
