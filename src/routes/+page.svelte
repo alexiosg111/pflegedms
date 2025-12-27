@@ -109,19 +109,22 @@
     }
   }
 
-  function openAddModal(type: string) {
-    if (type === 'patient') {
+  function openAddModal(moduleId?: string) {
+    const type = moduleId || currentModule;
+    
+    if (type === 'patients' || type === 'patient') {
       editingPatient = { id: '', name: '', birthDate: '', address: '', phone: '', insurance: '', diagnosis: '', notes: '' };
-    } else if (type === 'appointment') {
+      showAddModal = true;
+    } else if (type === 'schedule' || type === 'appointment') {
       editingAppointment = { id: '', title: '', date: '', time: '', patientId: '', staffId: '', notes: '' };
-    } else if (type === 'document') {
+      showAddModal = true;
+    } else if (type === 'documentation' || type === 'document') {
       editingDocument = null;
       currentView = 'form';
-      return;
     } else if (type === 'staff') {
       editingStaff = { id: '', name: '', position: '', phone: '', email: '', qualifications: '', notes: '' };
+      showAddModal = true;
     }
-    showAddModal = true;
   }
 
   function openEditModal(type: string, item: any) {
@@ -374,7 +377,7 @@
               <span class="module-icon">{modules.find(m => m.id === currentModule)?.icon}</span>
               {modules.find(m => m.id === currentModule)?.title}
             </h1>
-            <button class="add-button" on:click={() => currentModule && openAddModal(currentModule.slice(0, -1))}>
+            <button class="add-button" on:click={() => openAddModal()}>
               + Hinzufügen
             </button>
           </header>
@@ -672,7 +675,7 @@
       </div>
 
       <footer class="footer">
-        <p>Version 1.5.0 • Professional Document Management</p>
+        <p>Version 1.6.0 • Professional Document Management</p>
         <div class="footer-links">
           <span>🚀 Powered by PflegeDMS</span>
         </div>

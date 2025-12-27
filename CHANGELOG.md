@@ -5,6 +5,37 @@ All notable changes to PflegeDMS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2024-12-25
+
+### Fixed - Critical Bug Fixes
+
+#### Add Button Fix
+- **Fixed "Hinzufügen" button not working**: The add button in all modules now correctly opens the add modal
+- **Improved module detection**: Fixed issue where module names weren't properly mapped to form types
+- **Fixed staff module**: Staff module now properly opens when clicking add button
+- **Better error handling**: More robust type detection for all modules (patients, schedule, documentation, staff)
+
+#### Technical Improvements
+- Refactored `openAddModal()` function to accept module IDs directly
+- Added support for both singular and plural module names
+- Simplified button click handler (removed unreliable `slice()` operation)
+- Better TypeScript type safety with optional parameters
+
+### Changed
+- Version updated from 1.5.0 to 1.6.0
+
+### Includes all features from v1.5.0
+- Modern UI/UX design with animations
+- All document management features from v1.4.0
+- 10 Document categories
+- Full version control
+- Advanced search & filtering
+- Digital approval workflows
+- Complete audit logging
+- Automatic document classification
+- Document templates
+- Tag system
+
 ## [1.5.0] - 2024-12-25
 
 ### Added - Improved UI/UX Design
