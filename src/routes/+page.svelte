@@ -779,7 +779,7 @@
       </div>
 
       <footer class="footer">
-        <p>Version 1.6.0 • Professional Document Management</p>
+        <p>Version 1.8.0 • Professional Document Management</p>
         <div class="footer-links">
           <span>🚀 Powered by PflegeDMS</span>
         </div>
