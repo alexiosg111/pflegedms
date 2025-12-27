@@ -406,6 +406,54 @@ export function extractMetadata(content: string): { [key: string]: string } {
   return metadata;
 }
 
+export function updateDocumentWithOCR(
+  document: Document,
+  ocrData: import('./types').DocumentOCRData,
+  verifiedText: string
+): Document {
+  const now = getCurrentTimestamp();
+  const browserInfo = getBrowserInfo();
+  
+  const auditEntry: AuditLogEntry = {
+    id: `audit-${Date.now()}`,
+    action: 'edit',
+    userId: CURRENT_USER_ID,
+    userName: CURRENT_USER_NAME,
+    timestamp: now,
+    details: 'OCR-Text verifiziert und gespeichert',
+    ...browserInfo
+  };
+  
+  return {
+    ...document,
+    ocrText: verifiedText,
+    ocrData: {
+      ...ocrData,
+      verificationStatus: 'completed',
+      verifiedAt: now,
+      verifiedBy: CURRENT_USER_ID
+    },
+    updatedAt: now,
+    auditLog: [...document.auditLog, auditEntry]
+  };
+}
+
+export function saveOCRInProgress(
+  document: Document,
+  ocrData: import('./types').DocumentOCRData
+): Document {
+  const now = getCurrentTimestamp();
+  
+  return {
+    ...document,
+    ocrData: {
+      ...ocrData,
+      verificationStatus: 'in-progress'
+    },
+    updatedAt: now
+  };
+}
+
 export const DEFAULT_TEMPLATES: DocumentTemplate[] = [
   {
     id: 'template-pflegeplan',

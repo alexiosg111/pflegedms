@@ -5,7 +5,51 @@ All notable changes to PflegeDMS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.6.0] - 2024-12-25
+## [1.6.0] - 2024-12-27
+
+### Added - OCR Document Text Extraction
+
+#### New OCR Feature
+- **OCR Text Extraction**: Automatically extract text from scanned documents using Tesseract.js
+- **Confidence-Based Verification**: View confidence scores for each extracted line of text
+  - High confidence (80-100%): Green indicator
+  - Medium confidence (60-80%): Yellow indicator
+  - Low confidence (<60%): Red indicator, requires manual verification
+- **Interactive Verification Interface**: Split-view panel showing original image and extracted text side-by-side
+  - Left panel: Original document with dynamic line highlighting
+  - Right panel: Line-by-line verification with edit capabilities
+  - Zoom and pan controls for better document readability
+- **Human-in-the-Loop Workflow**: Manual verification and correction of extracted text
+  - Click-to-edit inline text corrections
+  - Quick verify/reject buttons for each line
+  - Progress tracking with visual indicators
+- **Batch Operations**:
+  - Auto-verify all high confidence lines (>85%)
+  - Jump to low confidence lines for quick review
+  - Filter by verification status or confidence level
+- **Multi-Language Support**: German and English OCR recognition (default: German + English)
+- **Resume Capability**: Save and resume verification progress
+- **Automatic Document Classification**: Detected text is automatically analyzed to suggest document category
+- **Metadata Extraction**: Automatically extract dates, diagnoses, and other metadata from OCR text
+- **Privacy-First**: All OCR processing runs locally in browser/Electron - no external API calls
+
+#### Technical Implementation
+- Added `tesseract.js` dependency for local OCR processing
+- New components:
+  - `DocumentScanUpload.svelte`: Upload and process document scans
+  - `OCRVerificationPanel.svelte`: Split-view verification interface
+  - `OCRLineItem.svelte`: Individual line verification component
+- New service: `ocrService.ts` with helper functions for OCR operations
+- Extended document types with `OCRLine`, `OCRResult`, and `DocumentOCRData` interfaces
+- Documents with verified OCR data show 🔍 OCR badge in document list
+- Worker-based processing to prevent UI freezing during OCR
+- Real-time progress indicators during text extraction
+
+#### UI/UX Enhancements
+- New "🔍 OCR Scan" button in documentation module
+- Visual badges showing OCR verification status on documents
+- Smooth transitions between upload, processing, and verification stages
+- Responsive design that works on all screen sizes
 
 ### Fixed - Critical Bug Fixes
 
