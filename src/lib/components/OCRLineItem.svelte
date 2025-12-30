@@ -1,41 +1,32 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import type { OCRLine } from '../types';
   import { getConfidenceColor, getConfidenceLabel } from '../ocrService';
   
   export let line: OCRLine;
+  export let lines: OCRLine[] = [];
   export let isSelected: boolean = false;
   export let onSelect: (line: OCRLine) => void;
   export let onVerify: (line: OCRLine) => void;
   export let onEdit: (line: OCRLine, newText: string) => void;
   
-  let isEditing = false;
-  let editText = line.correctedText || line.text;
+  let showTooltip = false;
   
   function handleClick() {
     onSelect(line);
   }
   
-  function handleEdit() {
-    isEditing = true;
-  }
-  
-  function handleSave() {
-    onEdit(line, editText);
-    isEditing = false;
-  }
-  
-  function handleCancel() {
-    editText = line.correctedText || line.text;
-    isEditing = false;
-  }
-  
-  function handleVerify() {
+  function handleVerify(e: Event) {
+    e.stopPropagation();
     onVerify(line);
   }
   
   $: confidenceColor = getConfidenceColor(line.confidence);
   $: confidenceLabel = getConfidenceLabel(line.confidence);
   $: displayText = line.correctedText || line.text;
+  $: wordConfidenceAvg = line.wordConfidences 
+    ? Math.round(line.wordConfidences.reduce((a, b) => a + b, 0) / line.wordConfidences.length)
+    : null;
 </script>
 
 <div 
@@ -50,43 +41,78 @@
   <div class="line-header">
     <span class="line-status">
       {#if line.verified}
-        <span class="status-icon verified">✓</span>
+        <span class="status-icon verified" title="Verifiziert">✓</span>
       {:else}
-        <span class="status-icon pending">⏳</span>
+        <span class="status-icon pending" title="Unverifiziert">⏳</span>
       {/if}
     </span>
-    <span 
-      class="confidence-badge" 
-      style="background-color: {confidenceColor};"
-      title="Konfidenz: {Math.round(line.confidence)}%"
+    <div 
+      class="confidence-wrapper"
+      on:mouseenter={() => showTooltip = true}
+      on:mouseleave={() => showTooltip = false}
+      role="tooltip"
     >
-      {confidenceLabel} ({Math.round(line.confidence)}%)
-    </span>
+      <span 
+        class="confidence-badge" 
+        style="background-color: {confidenceColor};"
+      >
+        {confidenceLabel} ({Math.round(line.confidence)}%)
+      </span>
+      {#if showTooltip}
+        <div class="tooltip">
+          <div class="tooltip-row">
+            <span>Zeilen-Konfidenz:</span>
+            <strong>{Math.round(line.confidence)}%</strong>
+          </div>
+          {#if wordConfidenceAvg !== null}
+            <div class="tooltip-row">
+              <span>Wort-Durchschnitt:</span>
+              <strong>{wordConfidenceAvg}%</strong>
+            </div>
+          {/if}
+          {#if line.wordConfidences && line.wordConfidences.length > 0}
+            <div class="word-confidences">
+              <span>Wort-Konfidenzen:</span>
+              <div class="word-bars">
+                {#each line.wordConfidences as wc}
+                  <div 
+                    class="word-bar"
+                    style="width: {wc}%; background-color: {getConfidenceColor(wc)}"
+                    title="{Math.round(wc)}%"
+                  ></div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+          {#if line.alternatives && line.alternatives.length > 0}
+            <div class="tooltip-alternatives">
+              <span>Alternativen:</span>
+              <div class="alternatives-list">
+                {#each line.alternatives.slice(0, 3) as alt}
+                  <span class="alternative">{alt}</span>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </div>
+    {#if line.correctedText}
+      <span class="corrected-badge" title="Korrigiert">✏️</span>
+    {/if}
   </div>
   
   <div class="line-content">
-    {#if isEditing}
-      <div class="edit-form">
-        <input 
-          type="text" 
-          bind:value={editText}
-          class="edit-input"
-          on:click|stopPropagation
-        />
-        <div class="edit-actions">
-          <button class="btn-save" on:click|stopPropagation={handleSave}>Speichern</button>
-          <button class="btn-cancel" on:click|stopPropagation={handleCancel}>Abbrechen</button>
-        </div>
-      </div>
-    {:else}
-      <div class="text-display">
-        <span class:corrected={line.correctedText}>{displayText}</span>
-        {#if !line.verified}
-          <div class="quick-actions">
-            <button class="btn-edit" on:click|stopPropagation={handleEdit} title="Bearbeiten">✏️</button>
-            <button class="btn-verify" on:click|stopPropagation={handleVerify} title="Verifizieren">✓</button>
-          </div>
-        {/if}
+    <span class:text-corrected={line.correctedText}>{displayText}</span>
+    {#if !line.verified}
+      <div class="quick-actions">
+        <button 
+          class="btn-verify" 
+          on:click={handleVerify} 
+          title="Verifizieren"
+        >
+          ✓
+        </button>
       </div>
     {/if}
   </div>
@@ -116,6 +142,7 @@
   .line-item.verified {
     opacity: 0.7;
     background-color: #f0fdf4;
+    border-color: #86efac;
   }
   
   .line-header {
@@ -137,6 +164,11 @@
     opacity: 0.5;
   }
   
+  .confidence-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  
   .confidence-badge {
     display: inline-block;
     padding: 0.25rem 0.5rem;
@@ -146,19 +178,106 @@
     font-weight: 600;
   }
   
+  .tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: white;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    min-width: 200px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    margin-bottom: 0.5rem;
+  }
+  
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1f2937;
+  }
+  
+  .tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.375rem;
+  }
+  
+  .tooltip-row:last-child {
+    margin-bottom: 0;
+  }
+  
+  .tooltip-row span {
+    color: #9ca3af;
+  }
+  
+  .word-confidences {
+    margin-top: 0.5rem;
+  }
+  
+  .word-confidences span {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #9ca3af;
+  }
+  
+  .word-bars {
+    display: flex;
+    gap: 2px;
+    height: 6px;
+  }
+  
+  .word-bar {
+    height: 100%;
+    border-radius: 2px;
+    min-width: 2px;
+    flex: 1;
+  }
+  
+  .tooltip-alternatives {
+    margin-top: 0.5rem;
+    border-top: 1px solid #374151;
+    padding-top: 0.5rem;
+  }
+  
+  .tooltip-alternatives span {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #9ca3af;
+  }
+  
+  .alternatives-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  
+  .alternative {
+    color: #d1d5db;
+    font-size: 0.7rem;
+  }
+  
+  .corrected-badge {
+    font-size: 0.875rem;
+  }
+  
   .line-content {
     font-size: 0.95rem;
     color: #374151;
-  }
-  
-  .text-display {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
   }
   
-  .text-display span.corrected {
+  .text-corrected {
     color: #059669;
     font-weight: 500;
   }
@@ -174,66 +293,18 @@
     opacity: 1;
   }
   
-  .btn-edit, .btn-verify {
-    padding: 0.25rem 0.5rem;
+  .btn-verify {
+    padding: 0.375rem 0.625rem;
     border: none;
-    background: transparent;
+    background: #10b981;
+    color: white;
     cursor: pointer;
     border-radius: 0.25rem;
+    font-size: 0.875rem;
     transition: background 0.2s;
   }
   
-  .btn-edit:hover {
-    background: #dbeafe;
-  }
-  
   .btn-verify:hover {
-    background: #dcfce7;
-  }
-  
-  .edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .edit-input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 0.95rem;
-  }
-  
-  .edit-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .btn-save, .btn-cancel {
-    padding: 0.375rem 0.75rem;
-    border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .btn-save {
-    background-color: #10b981;
-    color: white;
-  }
-  
-  .btn-save:hover {
-    background-color: #059669;
-  }
-  
-  .btn-cancel {
-    background-color: #e5e7eb;
-    color: #374151;
-  }
-  
-  .btn-cancel:hover {
-    background-color: #d1d5db;
+    background: #059669;
   }
 </style>

@@ -129,6 +129,8 @@ export interface OCRLine {
   id: string;
   text: string;
   confidence: number;
+  wordConfidences?: number[];
+  alternatives?: string[];
   boundingBox: {
     x: number;
     y: number;
@@ -137,6 +139,16 @@ export interface OCRLine {
   };
   verified: boolean;
   correctedText?: string;
+}
+
+export interface OCRConfidenceStats {
+  averageConfidence: number;
+  minConfidence: number;
+  maxConfidence: number;
+  highConfidenceCount: number;
+  mediumConfidenceCount: number;
+  lowConfidenceCount: number;
+  criticalCount: number;
 }
 
 export interface OCRResult {

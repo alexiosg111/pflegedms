@@ -5,6 +5,80 @@ All notable changes to PflegeDMS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2024-12-30
+
+### Added - Erweiterte OCR-Konfidenz-Analyse und Rich-Text Editor
+
+#### Enhanced Confidence Processing
+- **Word-Level Confidence Extraction**: OCR lines now include per-word confidence scores from Tesseract
+- **Confidence Classification** with three levels:
+  - Green (>85%): Very high confidence
+  - Yellow (60-85%): Medium confidence
+  - Red (<60%): Low confidence
+- **Statistics Calculation** (`calculateConfidenceStats()`):
+  - Average confidence
+  - Min/Max values
+  - Distribution by confidence class
+  - Critical lines count (low confidence + unverified)
+
+#### New OCRLineEditor Component
+Complete modal-based rich-text editor with:
+- **Rich-Text Input**:
+  - Large textarea (min. 4 lines)
+  - Proper styling with focus states
+  - Character and word counter
+- **Contextual Help**:
+  - Original text display (read-only)
+  - Prominent confidence information
+  - Tesseract alternative suggestions
+- **Function Keys**:
+  - Undo/Redo within editor (Ctrl+Z / Ctrl+Y)
+  - Copy original text function
+  - Quick-fix buttons for common OCR errors (l→I, O→0, rn→m, etc.)
+  - Auto-correct based on confidence
+- **Confirmation Actions**:
+  - Save & Next button (jumps to next low-confidence line)
+  - Save & Close button
+  - Discard changes button
+
+#### Enhanced OCRVerificationPanel
+- **Confidence Histogram**:
+  - Visual distribution of confidence values (bar chart)
+  - Clickable to filter by confidence range
+  - Real-time updates
+- **Improved Statistics Box**:
+  - Average confidence display
+  - Critical lines count
+  - Verification progress with separate counters per confidence class
+- **New Batch Actions**:
+  - "Verify all low-confidence lines" with summary modal
+  - "Auto-correct and verify" for >85% confidence lines
+- **Editor Integration**: Seamless integration with new OCRLineEditor
+
+#### Enhanced OCRLineItem
+- **Word-Level Confidence Display**: Shows per-word confidence when available
+- **Improved Tooltip**: Detailed confidence information on hover
+- **Alternative Suggestions**: Displays Tesseract alternatives in tooltip
+- **Click-to-Edit**: Opens the new OCRLineEditor modal
+
+#### Technical Changes
+- Updated `OCRLine` interface with new properties:
+  - `wordConfidences?: number[]` - Per-word confidence scores
+  - `alternatives?: string[]` - Alternative OCR suggestions
+- New `OCRConfidenceStats` interface for statistics
+- Updated `ocrService.ts` with:
+  - Word confidence extraction from Tesseract data
+  - `calculateConfidenceStats()` function
+  - `getConfidenceHistogramData()` function
+  - `applyQuickFix()` for common OCR corrections
+  - `getNextLowConfidenceLine()` for navigation
+  - `verifyAllLowConfidenceWithSummary()` for batch verification
+
+### Changed
+- Updated confidence thresholds to match new classification (>=85% high, 60-85% medium, <60% low)
+- Confidence badges now show "Sehr hoch", "Mittel", "Niedrig" instead of "Hoch", "Mittel", "Niedrig"
+- All OCR components now TypeScript-strict compatible
+
 ## [1.8.0] - 2024-12-27
 
 ### Changed
