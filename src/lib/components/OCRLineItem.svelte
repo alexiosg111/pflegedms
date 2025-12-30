@@ -16,8 +16,9 @@
     onSelect(line);
   }
   
-  function handleVerify(e: Event) {
+  function handleVerify(e: MouseEvent | KeyboardEvent) {
     e.stopPropagation();
+    e.preventDefault();
     onVerify(line);
   }
   
@@ -105,15 +106,13 @@
   <div class="line-content">
     <span class:text-corrected={line.correctedText}>{displayText}</span>
     {#if !line.verified}
-      <div class="quick-actions">
-        <button 
-          class="btn-verify" 
-          on:click={handleVerify} 
-          title="Verifizieren"
-        >
-          ✓
-        </button>
-      </div>
+      <button 
+        class="btn-verify" 
+        on:click={handleVerify} 
+        title="Verifizieren"
+      >
+        ✓
+      </button>
     {/if}
   </div>
 </div>
@@ -280,17 +279,7 @@
   .text-corrected {
     color: #059669;
     font-weight: 500;
-  }
-  
-  .quick-actions {
-    display: flex;
-    gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  
-  .line-item:hover .quick-actions {
-    opacity: 1;
+    flex: 1;
   }
   
   .btn-verify {
@@ -302,6 +291,7 @@
     border-radius: 0.25rem;
     font-size: 0.875rem;
     transition: background 0.2s;
+    flex-shrink: 0;
   }
   
   .btn-verify:hover {
