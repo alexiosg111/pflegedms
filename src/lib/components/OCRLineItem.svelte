@@ -8,7 +8,6 @@
   export let isSelected: boolean = false;
   export let onSelect: (line: OCRLine) => void;
   export let onVerify: (line: OCRLine) => void;
-  export let onEdit: (line: OCRLine, newText: string) => void;
   
   let showTooltip = false;
   

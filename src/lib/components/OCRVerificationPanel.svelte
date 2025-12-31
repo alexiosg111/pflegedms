@@ -430,7 +430,6 @@
               isSelected={selectedLine?.id === line.id}
               onSelect={handleLineSelect}
               onVerify={handleLineVerify}
-              onEdit={() => {}}
             />
           </div>
         {/each}
