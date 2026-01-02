@@ -105,15 +105,24 @@
   
   <div class="line-content">
     <span class:text-corrected={line.correctedText}>{displayText}</span>
-    {#if !line.verified}
+    <div class="line-actions">
       <button 
-        class="btn-verify" 
-        on:click={handleVerify} 
-        title="Verifizieren"
+        class="btn-edit" 
+        on:click|stopPropagation={() => onEdit(line, displayText)} 
+        title="Bearbeiten"
       >
-        ✓
+        ✏️
       </button>
-    {/if}
+      {#if !line.verified}
+        <button 
+          class="btn-verify" 
+          on:click={handleVerify} 
+          title="Verifizieren"
+        >
+          ✓
+        </button>
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -274,6 +283,28 @@
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
+  }
+  
+  .line-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  
+  .btn-edit {
+    padding: 0.375rem 0.625rem;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+  }
+  
+  .btn-edit:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
   }
   
   .text-corrected {
