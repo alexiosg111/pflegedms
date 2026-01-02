@@ -5,6 +5,31 @@ All notable changes to PflegeDMS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2024-12-30
+
+### Fixed - OCR Verification and Editor Stability
+
+#### OCR Verification State Management
+- **Persistent Edits**: Fixed issue where text edits were not correctly saved to the document state
+- **Reactive Updates**: Ensured that the verification list and progress counters update immediately after edits
+- **Immutable State Pattern**: Implemented proper Svelte state updates using the spread operator (`lines = [...lines]`)
+- **Verification Flow**: Fixed automatic navigation to the next unverified or low-confidence line after save
+
+#### Simplified & Stabilized OCRLineEditor
+- **Modal Stability**: Fixed modal behavior to ensure reliable opening/closing
+- **Reliable Closure**: Implemented ESC key support and click-outside-to-close functionality
+- **Improved UX**: Auto-focus on the editor textarea when the modal opens
+- **Consistent Event Handling**: Standardized `on:save` and `on:cancel` events for better integration
+
+#### Improved OCRLineItem Integration
+- **Correct Event Dispatch**: Added a dedicated edit button and ensured clicking on a line correctly opens the editor
+- **Visual Feedback**: Improved styling for edited/verified lines in the list
+
+### Added - Progressive Editor Enhancements
+- **Undo/Redo History**: Implemented a history stack within the line editor (Ctrl+Z / Ctrl+Y support)
+- **Quick-Fix Buttons**: Re-introduced stable buttons for common OCR errors (l→I, O→0, etc.)
+- **Copy Original Text**: One-click button to copy the original OCR text for comparison
+
 ## [1.9.0] - 2024-12-30
 
 ### Added - Erweiterte OCR-Konfidenz-Analyse und Rich-Text Editor
