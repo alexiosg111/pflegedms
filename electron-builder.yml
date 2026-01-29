@@ -8,14 +8,15 @@ files:
 directories:
   buildResources: assets
   output: release
-win:
-  target:
-    - target: nsis
-      arch:
-        - x64
-    - target: portable
-  icon: assets/icon.png
-  signAndEditExecutable: false
+# DISABLED: Windows build is broken in this release - use macOS or Linux builds instead
+# win:
+#   target:
+#     - target: nsis
+#     - target: portable
+#   arch:
+#     - x64
+#   icon: assets/icon.png
+#   signAndEditExecutable: false
 mac:
   target:
     - target: dmg
