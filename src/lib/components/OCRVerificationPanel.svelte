@@ -31,6 +31,7 @@
   let dragStartY = 0;
   let showHistogram = false;
   let showSummaryModal = false;
+  let showEditor = false;
   let summaryData: { total: number; autoVerified: number; requiresReview: number } | null = null;
   let histogramFilter: number | null = null;
   
@@ -65,6 +66,7 @@
   function handleLineSelect(line: OCRLine) {
     const index = lines.findIndex(l => l.id === line.id);
     selectedLineIndex = index;
+    showEditor = true;
     drawHighlight();
   }
   
@@ -87,11 +89,15 @@
       if (nextIndex !== null) {
         selectedLineIndex = nextIndex;
         drawHighlight();
+        scrollToLine(nextIndex);
+      } else {
+        showEditor = false;
       }
     }
   }
   
   function handleLineEditorClose() {
+    showEditor = false;
     drawHighlight();
   }
   
@@ -430,7 +436,7 @@
               isSelected={selectedLine?.id === line.id}
               onSelect={handleLineSelect}
               onVerify={handleLineVerify}
-              onEdit={() => {}}
+              onEdit={handleLineSelect}
             />
           </div>
         {/each}
@@ -453,7 +459,7 @@
 <OCRLineEditor 
   line={selectedLine || lines[0] || { id: '', text: '', confidence: 0, boundingBox: { x: 0, y: 0, width: 0, height: 0 }, verified: false }}
   {lines}
-  isOpen={selectedLineIndex !== null && selectedLine !== undefined}
+  isOpen={showEditor}
   on:save={handleLineEdit}
   on:cancel={handleLineEditorClose}
 />
